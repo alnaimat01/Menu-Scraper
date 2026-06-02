@@ -141,7 +141,7 @@ export default function Index() {
             </h1>
           </div>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-            استخراج قوائم المطاعم من طلبات وإنشاء ملفات Excel بصيغة Chikex
+             استخراج منيو من طلبات بصيغة Excel
           </p>
         </div>
 
@@ -330,7 +330,7 @@ export default function Index() {
                   <div className="text-sm text-green-700 space-y-1">
                     <p>✓ تم استخراج <strong>{extractedCount}</strong> عنصر من القائمة</p>
                     <p>✓ اكتمل في <strong>{processingTime}</strong> ثانية</p>
-                    <p>✓ تم تنزيل ملف Excel بصيغة Chikex</p>
+                    <p>✓ تم تنزيل ملف Excel  </p>
                   </div>
                 </div>
               )}
