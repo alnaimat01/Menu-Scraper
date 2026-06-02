@@ -1,3 +1,4 @@
+import * as React from 'react';
 import { useState, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -105,7 +106,7 @@ export default function Index() {
 
       console.log(`🎉 Complete! Time: ${totalTime}s`);
       toast.success(`✓ تم استخراج ${items.length} عنصر في ${totalTime} ثانية`, {
-        description: 'تم تنزيل ملف Excel بنجاح'
+        description: 'بنجاح Excel تم تنزيل ملف   '
       });
 
     } catch (error) {
@@ -141,7 +142,7 @@ export default function Index() {
             </h1>
           </div>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-             استخراج منيو من طلبات بصيغة Excel
+            Excel استخراج منيو من طلبات بصيغة 
           </p>
         </div>
 
@@ -183,7 +184,7 @@ export default function Index() {
                   <span className="flex-shrink-0 w-6 h-6 bg-blue-600 text-white rounded-full flex items-center justify-center text-xs font-bold">4</span>
                   <div>
                     <strong>املأ النموذج وأنشئ الملف</strong>
-                    <p className="text-gray-600 mt-1">أدخل اسم المطعم، رقم المطعم من الرابط، الصق الكود المصدري، واضغط "إنشاء Excel"</p>
+                    <p className="text-gray-600 mt-1">  أدخل اسم المطعم، رقم المطعم من الرابط، الصق الكود المصدري، واضغط " Excelإنشاء" </p>
                   </div>
                 </li>
               </ol>
@@ -212,7 +213,7 @@ export default function Index() {
                   id="restaurant-name"
                   placeholder="مثال: Great Burger & Pasta"
                   value={restaurantName}
-                  onChange={(e) => setRestaurantName(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRestaurantName(e.target.value)}
                   className="h-11"
                   dir="auto"
                 />
@@ -227,7 +228,7 @@ export default function Index() {
                   id="restaurant-id"
                   placeholder="667425"
                   value={restaurantId}
-                  onChange={(e) => setRestaurantId(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRestaurantId(e.target.value)}
                   className="h-11"
                   dir="ltr"
                 />
@@ -260,7 +261,7 @@ export default function Index() {
                   id="source-code"
                   placeholder="الصق الكود المصدري الكامل هنا (Ctrl+U → Ctrl+A → Ctrl+C)..."
                   value={sourceCode}
-                  onChange={(e) => setSourceCode(e.target.value)}
+                  onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setSourceCode(e.target.value)}
                   className="min-h-[300px] font-mono text-xs"
                   dir="ltr"
                 />
@@ -276,7 +277,7 @@ export default function Index() {
                   <p className="text-xs text-gray-600 text-center">
                     {progress < 40 ? 'جاري قراءة الكود المصدري...' : 
                      progress < 70 ? 'جاري استخراج عناصر القائمة...' : 
-                     progress < 90 ? 'جاري إنشاء ملف Excel...' : 'اكتمل!'}
+                     progress < 90 ? ' ...Excel جاري إنشاء ملف' : 'اكتمل!'}
                   </p>
                 </div>
               )}
@@ -296,7 +297,7 @@ export default function Index() {
                   ) : (
                     <>
                       <Download className="mr-2 h-5 w-5" />
-                      إنشاء وتنزيل Excel
+                     Excel إنشاء وتنزيل 
                     </>
                   )}
                 </Button>
@@ -330,7 +331,7 @@ export default function Index() {
                   <div className="text-sm text-green-700 space-y-1">
                     <p>✓ تم استخراج <strong>{extractedCount}</strong> عنصر من القائمة</p>
                     <p>✓ اكتمل في <strong>{processingTime}</strong> ثانية</p>
-                    <p>✓ تم تنزيل ملف Excel  </p>
+                    <p>✓  Excel تم تنزيل ملف     </p>
                   </div>
                 </div>
               )}
@@ -343,7 +344,7 @@ export default function Index() {
               🔒 تتم جميع العمليات محلياً في متصفحك. لا يتم إرسال أي بيانات إلى خوادم خارجية.
             </p>
             <p>
-              📊 صيغة Excel: الفئة | اسم العنصر | الوصف | السعر | الحجم | مجموعات الاختيار
+              📊 Excel File: الفئة | اسم العنصر | الوصف | السعر | الحجم | مجموعات الاختيار
             </p>
           </div>
         </div>
