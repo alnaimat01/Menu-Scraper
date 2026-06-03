@@ -143,7 +143,12 @@ export class SourceCodeParser {
           category: (item.sectionName as string) || (item.originalSection as string) || 'Uncategorized',
           itemName: (item.name as string) || 'Unknown Item',
           description: (item.description as string) || '',
-          price: this.formatPrice((item.basePrice as number) || (item.originalPrice as number) || (item.oldPrice as number) || (item.price as number)),          size: '',
+          price: this.formatPrice(this.getValidPrice(
+  item.basePrice,
+  item.originalPrice,
+  item.oldPrice,
+  item.price
+)),          size: '',
           choiceGroups: (item.hasChoices as boolean) ? 'Has choices (details not available in menu list)' : ''
         };
 
@@ -211,8 +216,13 @@ export class SourceCodeParser {
             category: categoryName,
             itemName: item.name || item.title || 'Unknown Item',
             description: item.description || item.desc || '',
-            price: this.formatPrice(item.basePrice || (item as any).originalPrice || (item as any).oldPrice || item.price || 0),
-            size: this.extractSize(item),
+price: this.formatPrice(this.getValidPrice(
+  item.basePrice,
+  (item as any).originalPrice,
+  (item as any).oldPrice,
+  item.price
+)), 
+           size: this.extractSize(item),
             choiceGroups: this.extractChoiceGroups(item)
           };
 
@@ -350,7 +360,12 @@ export class SourceCodeParser {
                 category: categoryName,
                 itemName: (itemObj.name as string) || (itemObj.title as string) || 'Unknown Item',
                 description: (itemObj.description as string) || (itemObj.desc as string) || '',
-                price: this.formatPrice((itemObj.basePrice as number) || (itemObj.originalPrice as number) || (itemObj.oldPrice as number) || (itemObj.price as number) || 0),
+                price: this.formatPrice(this.getValidPrice(
+  itemObj.basePrice,
+  itemObj.originalPrice,
+  itemObj.oldPrice,
+  itemObj.price
+)),
                 size: this.extractSize(itemObj as MenuItem),
                 choiceGroups: this.extractChoiceGroups(itemObj as MenuItem)
               };
@@ -397,19 +412,26 @@ export class SourceCodeParser {
     
     return numPrice.toFixed(3);
   }
+  private getValidPrice(...prices: unknown[]): number {
+  for (const price of prices) {
+    const value =
+      typeof price === 'string'
+        ? parseFloat(price)
+        : typeof price === 'number'
+          ? price
+          : NaN;
 
-  private extractSize(item: MenuItem): string {
-    if (!item) return '';
-
-    // Look for size information
-    const size = item.size || item.variant || item.option || '';
-    
-    if (Array.isArray(size)) {
-      return size.map(s => typeof s === 'string' ? s : (s as Record<string, unknown>).name || '').join(', ');
+    if (!Number.isNaN(value) && value > 0) {
+      return value;
     }
-
-    return String(size);
   }
+
+  return 0;
+}
+
+ private extractSize(item: MenuItem): string {
+  return '';
+}
 
   private extractChoiceGroups(item: MenuItem): string {
     if (!item) return '';
