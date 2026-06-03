@@ -26,6 +26,20 @@ export class ExcelExporter {
     // Create workbook and worksheet
     const workbook = XLSX.utils.book_new();
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+    const modifiersData = [
+  ['Group Name', 'Option Name', 'Option Price', 'Old Price', 'Min', 'Max']
+];
+
+const modifiersWorksheet = XLSX.utils.aoa_to_sheet(modifiersData);
+
+modifiersWorksheet['!cols'] = [
+  { wch: 30 },  // Group Name
+  { wch: 30 },  // Option Name
+  { wch: 15 },  // Option Price
+  { wch: 15 },  // Old Price
+  { wch: 10 },  // Min
+  { wch: 10 }   // Max
+];
 
     // Set column widths
     worksheet['!cols'] = [
@@ -39,6 +53,7 @@ export class ExcelExporter {
 
     // Add worksheet to workbook
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Menu');
+    XLSX.utils.book_append_sheet(workbook, modifiersWorksheet, 'Modifiers');
 
     // Generate simple filename - only restaurant name
     const cleanName = restaurantName
