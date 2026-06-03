@@ -143,8 +143,7 @@ export class SourceCodeParser {
           category: (item.sectionName as string) || (item.originalSection as string) || 'Uncategorized',
           itemName: (item.name as string) || 'Unknown Item',
           description: (item.description as string) || '',
-          price: this.formatPrice(item.price as number),
-          size: '',
+          price: this.formatPrice((item.basePrice as number) || (item.originalPrice as number) || (item.oldPrice as number) || (item.price as number)),          size: '',
           choiceGroups: (item.hasChoices as boolean) ? 'Has choices (details not available in menu list)' : ''
         };
 
@@ -212,7 +211,7 @@ export class SourceCodeParser {
             category: categoryName,
             itemName: item.name || item.title || 'Unknown Item',
             description: item.description || item.desc || '',
-            price: this.formatPrice(item.price || item.basePrice || 0),
+            price: this.formatPrice(item.basePrice || (item as any).originalPrice || (item as any).oldPrice || item.price || 0),
             size: this.extractSize(item),
             choiceGroups: this.extractChoiceGroups(item)
           };
@@ -351,7 +350,7 @@ export class SourceCodeParser {
                 category: categoryName,
                 itemName: (itemObj.name as string) || (itemObj.title as string) || 'Unknown Item',
                 description: (itemObj.description as string) || (itemObj.desc as string) || '',
-                price: this.formatPrice((itemObj.price as number) || (itemObj.basePrice as number) || 0),
+                price: this.formatPrice((itemObj.basePrice as number) || (itemObj.originalPrice as number) || (itemObj.oldPrice as number) || (itemObj.price as number) || 0),
                 size: this.extractSize(itemObj as MenuItem),
                 choiceGroups: this.extractChoiceGroups(itemObj as MenuItem)
               };
