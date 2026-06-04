@@ -127,7 +127,7 @@ export class TalabatAPI {
   }
 
  async fetchItemChoices(branchId: string | number, itemId: string | number): Promise<any[]> {
-const endpoint = `http://localhost:3001/choices?branchId=${branchId}&itemId=${itemId}`;
+const endpoint = `https://menu-scraper1.onrender.com/choices?branchId=${branchId}&itemId=${itemId}`;
   try {
     const response = await fetch(endpoint, {
       method: 'GET',
