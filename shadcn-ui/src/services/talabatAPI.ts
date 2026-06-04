@@ -125,4 +125,28 @@ export class TalabatAPI {
     console.log(`📊 Parsed ${items.length} items from ${categories.length} categories`);
     return { items, categories };
   }
+
+ async fetchItemChoices(branchId: string | number, itemId: string | number): Promise<any[]> {
+const endpoint = `http://localhost:3001/choices?branchId=${branchId}&itemId=${itemId}`;
+  try {
+    const response = await fetch(endpoint, {
+      method: 'GET',
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+
+    if (!response.ok) {
+      console.log(`❌ Choices API failed for item ${itemId}: ${response.status}`);
+      return [];
+    }
+
+    const data = await response.json();
+
+    return data?.choices || [];
+  } catch (error) {
+    console.log(`❌ Choices API error for item ${itemId}:`, error);
+    return [];
+  }
+}
 }

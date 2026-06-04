@@ -5,6 +5,8 @@ export interface ParsedMenuItem {
   price: string;
   size: string;
   choiceGroups: string;
+  itemId?: string | number;
+  modifiers?: any[];
 }
 
 interface MenuItem {
@@ -149,7 +151,9 @@ export class SourceCodeParser {
   item.oldPrice,
   item.price
 )),          size: '',
-          choiceGroups: (item.hasChoices as boolean) ? 'Has choices (details not available in menu list)' : ''
+choiceGroups: (item.hasChoices as boolean) ? 'Has choices (details not available in menu list)' : '',
+itemId: item.id as string | number,
+modifiers: []
         };
 
         items.push(menuItem);
@@ -223,7 +227,9 @@ price: this.formatPrice(this.getValidPrice(
   item.price
 )), 
            size: this.extractSize(item),
-            choiceGroups: this.extractChoiceGroups(item)
+        choiceGroups: this.extractChoiceGroups(item),
+itemId: (item as any).id,
+modifiers: []
           };
 
           items.push(menuItem);
@@ -266,7 +272,9 @@ price: this.formatPrice(this.getValidPrice(
                   description: (item.description as string) || '',
                   price: this.formatPrice((offers?.price as number) || 0),
                   size: '',
-                  choiceGroups: ''
+                  choiceGroups: '',
+                  itemId: (item as any).id,
+                  modifiers: []
                 };
 
                 items.push(menuItem);
@@ -367,7 +375,9 @@ price: this.formatPrice(this.getValidPrice(
   itemObj.price
 )),
                 size: this.extractSize(itemObj as MenuItem),
-                choiceGroups: this.extractChoiceGroups(itemObj as MenuItem)
+                choiceGroups: this.extractChoiceGroups(itemObj as MenuItem),
+               itemId: (itemObj as any).id,
+                modifiers: []
               };
               items.push(menuItem);
             } else {
@@ -410,7 +420,7 @@ price: this.formatPrice(this.getValidPrice(
     
     if (isNaN(numPrice)) return '0.000';
     
-    return numPrice.toFixed(3);
+    return String(numPrice);
   }
   private getValidPrice(...prices: unknown[]): number {
   for (const price of prices) {

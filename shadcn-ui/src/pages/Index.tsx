@@ -10,6 +10,8 @@ import { toast } from 'sonner';
 import { Download, Loader2, FileSpreadsheet, Code, Info } from 'lucide-react';
 import { SourceCodeParser } from '@/services/sourceCodeParser';
 import { ExcelExporter } from '@/services/excelExporter';
+import { TalabatAPI } from '@/services/talabatAPI';
+
 
 export default function Index() {
   const [restaurantName, setRestaurantName] = useState('');
@@ -69,6 +71,33 @@ export default function Index() {
 
       const parser = new SourceCodeParser();
       const items = parser.parseSourceCode(sourceCode, restaurantName, restaurantId);
+      const talabatAPI = new TalabatAPI();
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+for (const item of items) {
+  if (!item.itemId) continue;
+
+  const hasChoices = item.choiceGroups
+    ?.toLowerCase()
+    .includes('has choices');
+
+  if (!hasChoices) {
+    item.modifiers = [];
+    continue;
+  }
+
+  try {
+    const choices = await talabatAPI.fetchItemChoices(restaurantId, item.itemId);
+    item.modifiers = choices;
+
+    await delay(700);
+  } catch (error) {
+    console.log(`Could not fetch modifiers for item ${item.itemName}`, error);
+    item.modifiers = [];
+
+    await delay(1500);
+  }
+}
 
       console.log(`✅ Extracted ${items.length} menu items`);
       setProgress(70);

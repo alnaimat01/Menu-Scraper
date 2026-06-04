@@ -14,6 +14,66 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'Proxy server is running' });
 });
 
+// Choices / modifiers proxy endpoint
+app.get('/choices', async (req, res) => {
+  try {
+    const { branchId, itemId } = req.query;
+
+    if (!branchId || !itemId) {
+      return res.status(400).json({
+        success: false,
+        error: 'branchId and itemId are required'
+      });
+    }
+
+    const url = `https://www.talabat.com/nextMenuBff/branch-menus/${branchId}/items/${itemId}/choices`;
+
+    console.log('🌐 Fetching choices:', url);
+
+    const response = await fetch(url, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'application/json, text/plain, */*',
+        'Accept-Language': 'en-US,en;q=0.9',
+        'Connection': 'keep-alive',
+        'Referer': 'https://www.talabat.com/',
+        'Origin': 'https://www.talabat.com'
+      },
+      timeout: 30000
+    });
+
+    if (!response.ok) {
+      console.error('❌ Choices HTTP Error:', response.status, response.statusText);
+      return res.status(response.status).json({
+        success: false,
+        error: `HTTP ${response.status}: ${response.statusText}`
+      });
+    }
+
+    const data = await response.json();
+    console.log(JSON.stringify(data, null, 2));
+
+    const choices = data?.choices || data?.data?.choices || [];
+
+    console.log(`✅ Choices fetched for item ${itemId}: ${choices.length} groups`);
+
+    res.json({
+      success: true,
+      choices
+    });
+
+  } catch (error) {
+    console.error('❌ Choices proxy error:', error.message);
+
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      type: error.name
+    });
+  }
+});
+
 // Main proxy endpoint
 app.post('/fetch', async (req, res) => {
   try {

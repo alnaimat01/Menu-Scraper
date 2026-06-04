@@ -1,7 +1,65 @@
-import * as XLSX from 'xlsx';
+import * as XLSX from 'xlsx-js-style';
 import { ParsedMenuItem } from './sourceCodeParser';
 
 export class ExcelExporter {
+  private isSizeGroup(group: any): boolean {
+  const groupName = String(group.sectionName || group.name || group.title || '').toLowerCase();
+
+  const groupNameLooksLikeSize =
+    groupName.includes('size') ||
+    groupName.includes('حجم') ||
+    groupName.includes('الحجم');
+
+  const options = group.choices || group.options || group.modifiers || [];
+
+  const sizeKeywords = [
+    'small',
+    'medium',
+    'large',
+    'big',
+    'regular',
+    'family',
+    'single',
+    'double',
+    'triple',
+
+    'kilo',
+    'kg',
+    'gram',
+    'gm',
+    'half kilo',
+    '1/2 kilo',
+    '1 kilo',
+    '250 gm',
+    '500 gm',
+
+    'piece',
+    'pieces',
+    'pcs',
+    'pc',
+
+    'صغير',
+    'وسط',
+    'كبير',
+    'عائلي',
+    'كيلو',
+    'نص كيلو',
+    'نصف كيلو',
+    'غرام',
+    'جرام',
+    'غم',
+    'قطعة',
+    'قطع'
+  ];
+
+  const optionLooksLikeSize = options.some((option: any) => {
+    const optionName = String(option.name || option.title || '').toLowerCase();
+
+    return sizeKeywords.some(keyword => optionName.includes(keyword));
+  });
+
+  return groupNameLooksLikeSize || optionLooksLikeSize;
+}
   exportToExcel(items: ParsedMenuItem[], restaurantName: string, restaurantId: string): void {
     console.log('📊 Generating Excel file...');
     console.log(`📝 Total items: ${items.length}`);
@@ -11,23 +69,85 @@ export class ExcelExporter {
     // Create worksheet data
     const worksheetData = [
       // Header row
-      ['Category', 'Item Name', 'Description', 'Price', 'Size', 'Choice Groups'],
+      ['Category', 'Item Name', 'Size', 'Price', 'Description', 'Choice Groups'],
       // Data rows
-      ...items.map(item => [
-        item.category,
-        item.itemName,
-        item.description,
-        item.price,
-        item.size,
-        item.choiceGroups
-      ])
+      ...items.flatMap(item => {
+  const choiceGroupNames = item.modifiers && item.modifiers.length > 0
+  ? item.modifiers
+      .filter((group: any) => !this.isSizeGroup(group))
+      .map((group: any) => group.sectionName || group.name || group.title || '')
+      .filter(Boolean)
+      .join(' #')
+  : item.choiceGroups;
+
+  const sizeGroup = item.modifiers?.find((group: any) =>
+    this.isSizeGroup(group)
+  );
+
+  const sizeOptions = sizeGroup?.choices || [];
+
+  if (sizeOptions.length === 0) {
+    return [[
+  item.category,
+  item.itemName,
+  item.size,
+  String(item.price),
+  item.description,
+  choiceGroupNames
+]];
+  }
+
+ return sizeOptions.map((sizeOption: any) => [
+    item.category,
+    item.itemName,
+    sizeOption.name || '',
+    String(sizeOption.price ?? item.price),
+    item.description,
+    choiceGroupNames
+]);
+})
     ];
 
     // Create workbook and worksheet
     const workbook = XLSX.utils.book_new();
     const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
-    const modifiersData = [
-  ['Group Name', 'Option Name', 'Option Price', 'Old Price', 'Min', 'Max']
+    // Highlight items with price = 0
+for (let row = 2; row <= worksheetData.length; row++) {
+  const priceCell = worksheet[`D${row}`];
+
+  if (!priceCell) continue;
+
+  if (Number(priceCell.v) === 0) {
+    priceCell.s = {
+      fill: {
+        patternType: 'solid',
+        fgColor: { rgb: 'FF0000' }
+      }
+    };
+  }
+}
+    const modifiersRows = items.flatMap(item => {
+  if (!item.modifiers || item.modifiers.length === 0) return [];
+
+  return item.modifiers
+  .filter((group: any) => !this.isSizeGroup(group))
+  .flatMap((group: any) => {
+    const options = group.choices || group.options || group.modifiers || [];
+
+    return options.map((option: any) => [
+      group.sectionName || group.name || group.title || '',
+      option.name || option.title || '',
+      option.price ?? '',
+      option.oldPrice === -1 ? '' : (option.oldPrice ?? ''),
+      group.minQuantity ?? group.min ?? '',
+      group.maxQuantity ?? group.max ?? ''
+    ]);
+  });
+});
+
+const modifiersData = [
+  ['Group Name', 'Option Name', 'Option Price', 'Old Price', 'Min', 'Max'],
+  ...modifiersRows
 ];
 
 const modifiersWorksheet = XLSX.utils.aoa_to_sheet(modifiersData);
@@ -45,9 +165,9 @@ modifiersWorksheet['!cols'] = [
     worksheet['!cols'] = [
       { wch: 20 },  // Category
       { wch: 30 },  // Item Name
-      { wch: 50 },  // Description
-      { wch: 12 },  // Price
       { wch: 15 },  // Size
+      { wch: 12 },  // Price
+      { wch: 50 },  // Description
       { wch: 40 }   // Choice Groups
     ];
 
