@@ -10,55 +10,52 @@ export class ExcelExporter {
     groupName.includes('حجم') ||
     groupName.includes('الحجم');
 
-  const options = group.choices || group.options || group.modifiers || [];
+  if (groupNameLooksLikeSize) return true;
 
-  const sizeKeywords = [
+  const options = group.choices || group.options || group.modifiers || [];
+  if (!options.length) return false;
+
+  const clearSizeWords = [
     'small',
     'medium',
     'large',
-    'big',
     'regular',
     'family',
     'single',
     'double',
     'triple',
 
-    'kilo',
-    'kg',
-    'gram',
-    'gm',
-    'half kilo',
-    '1/2 kilo',
-    '1 kilo',
-    '250 gm',
-    '500 gm',
-
-    'piece',
-    'pieces',
-    'pcs',
-    'pc',
-
     'صغير',
     'وسط',
     'كبير',
-    'عائلي',
-    'كيلو',
-    'نص كيلو',
-    'نصف كيلو',
-    'غرام',
-    'جرام',
-    'غم',
-    'قطعة',
-    'قطع'
+    'عائلي'
   ];
 
-  const optionLooksLikeSize = options.some((option: any) => {
-    const optionName = String(option.name || option.title || '').toLowerCase();
+  const isPureWeightOrPieces = (name: string) => {
+    const cleanName = name.trim().toLowerCase();
 
-    return sizeKeywords.some(keyword => optionName.includes(keyword));
-  });
+    return (
+      /^(\d+(\.\d+)?|\d+\/\d+)\s*(g|gm|gram|grams|kg|kilo|kilogram|kilograms)$/.test(cleanName) ||
+      /^(half|quarter)\s*(kg|kilo|kilogram)$/.test(cleanName) ||
+      /^(\d+)\s*(pc|pcs|piece|pieces)$/.test(cleanName) ||
+      /^(نص|نصف|ربع)\s*(كيلو|كجم|kg)$/.test(cleanName) ||
+      /^(\d+)\s*(قطعة|قطع)$/.test(cleanName)
+    );
+  };
 
-  return groupNameLooksLikeSize || optionLooksLikeSize;
+  const sizeLikeOptionsCount = options.filter((option: any) => {
+    const optionName = String(option.name || option.title || '').toLowerCase().trim();
+
+    if (!optionName) return false;
+
+    const hasClearSizeWord = clearSizeWords.some(keyword =>
+      optionName === keyword || optionName.includes(keyword)
+    );
+
+    return hasClearSizeWord || isPureWeightOrPieces(optionName);
+  }).length;
+
+  return sizeLikeOptionsCount >= Math.ceil(options.length * 0.7);
 }
   exportToExcel(items: ParsedMenuItem[], restaurantName: string, restaurantId: string): void {
     console.log('📊 Generating Excel file...');
