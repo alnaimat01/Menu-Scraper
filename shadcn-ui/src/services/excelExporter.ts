@@ -16,20 +16,27 @@ export class ExcelExporter {
   if (!options.length) return false;
 
   const clearSizeWords = [
-    'small',
-    'medium',
-    'large',
-    'regular',
-    'family',
-    'single',
-    'double',
-    'triple',
+  'small',
+  'medium',
+  'large',
+  'regular',
+  'family',
+  'single',
+  'double',
+  'triple',
+  'half',
+  'quarter',
+  'full',
 
-    'صغير',
-    'وسط',
-    'كبير',
-    'عائلي'
-  ];
+  'صغير',
+  'وسط',
+  'كبير',
+  'عائلي',
+  'نصف',
+  'نص',
+  'ربع',
+  'كامل'
+];
 
   const isPureWeightOrPieces = (name: string) => {
     const cleanName = name.trim().toLowerCase();
