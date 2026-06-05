@@ -67,15 +67,78 @@ export class ExcelExporter {
     console.log(`🔢 Restaurant ID: ${restaurantId}`);
 
     // Create worksheet data
+    const getGroupBaseName = (group: any) =>
+  group.sectionName || group.name || group.title || '';
+
+const getGroupSignature = (group: any) => {
+  const groupName = getGroupBaseName(group);
+  const options = group.choices || group.options || group.modifiers || [];
+
+  const optionsSignature = options
+    .map((option: any) => [
+      option.name || option.title || '',
+      option.price ?? '',
+      option.oldPrice === -1 ? '' : (option.oldPrice ?? '')
+    ].join('|'))
+    .join('||');
+
+  return [
+    groupName,
+    group.minQuantity ?? group.min ?? '',
+    group.maxQuantity ?? group.max ?? '',
+    optionsSignature
+  ].join('###');
+};
+
+const groupNameCounters = new Map<string, number>();
+const groupSignatureToUniqueName = new Map<string, string>();
+
+items.forEach(item => {
+  if (!item.modifiers || item.modifiers.length === 0) return;
+
+  item.modifiers
+    .filter((group: any) => !this.isSizeGroup(group))
+    .forEach((group: any) => {
+      const baseName = getGroupBaseName(group);
+      const signature = getGroupSignature(group);
+
+      if (groupSignatureToUniqueName.has(signature)) return;
+
+      const currentCount = groupNameCounters.get(baseName) || 0;
+      const uniqueName = currentCount === 0
+        ? baseName
+        : `${baseName} (${currentCount + 1})`;
+
+      groupNameCounters.set(baseName, currentCount + 1);
+      groupSignatureToUniqueName.set(signature, uniqueName);
+    });
+});
+
+const getUniqueGroupName = (group: any) => {
+  const signature = getGroupSignature(group);
+  return groupSignatureToUniqueName.get(signature) || getGroupBaseName(group);
+};
+    const exportItems = items.filter(item => {
+  const categoryName = String(item.category || '').trim().toLowerCase();
+
+  return !(
+    categoryName.includes('picks for you') ||
+    categoryName.includes('offer') ||
+    categoryName.includes('offers') ||
+    categoryName.includes('اختيارات على ذوقك') ||
+    categoryName.includes('عروض') ||
+    categoryName.includes('العروض')
+  );
+});
     const worksheetData = [
       // Header row
       ['Category', 'Item Name', 'Size', 'Price', 'Description', 'Choice Groups'],
       // Data rows
-      ...items.flatMap(item => {
+      ...exportItems.flatMap(item => {
   const choiceGroupNames = item.modifiers && item.modifiers.length > 0
   ? item.modifiers
       .filter((group: any) => !this.isSizeGroup(group))
-      .map((group: any) => group.sectionName || group.name || group.title || '')
+      .map((group: any) => getUniqueGroupName(group))
       .filter(Boolean)
       .join(' #')
   : item.choiceGroups;
@@ -126,24 +189,33 @@ for (let row = 2; row <= worksheetData.length; row++) {
     };
   }
 }
-    const modifiersRows = items.flatMap(item => {
-  if (!item.modifiers || item.modifiers.length === 0) return [];
+    const modifiersMap = new Map<string, any[]>();
 
-  return item.modifiers
-  .filter((group: any) => !this.isSizeGroup(group))
-  .flatMap((group: any) => {
-    const options = group.choices || group.options || group.modifiers || [];
+items.forEach(item => {
+  if (!item.modifiers || item.modifiers.length === 0) return;
 
-    return options.map((option: any) => [
-      group.sectionName || group.name || group.title || '',
-      option.name || option.title || '',
-      option.price ?? '',
-      option.oldPrice === -1 ? '' : (option.oldPrice ?? ''),
-      group.minQuantity ?? group.min ?? '',
-      group.maxQuantity ?? group.max ?? ''
-    ]);
-  });
+  item.modifiers
+    .filter((group: any) => !this.isSizeGroup(group))
+    .forEach((group: any) => {
+      const options = group.choices || group.options || group.modifiers || [];
+
+      options.forEach((option: any) => {
+        const row = [
+          getUniqueGroupName(group),
+          option.name || option.title || '',
+          option.price ?? '',
+          option.oldPrice === -1 ? '' : (option.oldPrice ?? ''),
+          group.minQuantity ?? group.min ?? '',
+          group.maxQuantity ?? group.max ?? ''
+        ];
+
+        const key = row.join('||');
+        modifiersMap.set(key, row);
+      });
+    });
 });
+
+const modifiersRows = Array.from(modifiersMap.values());
 
 const modifiersData = [
   ['Group Name', 'Option Name', 'Option Price', 'Old Price', 'Min', 'Max'],
