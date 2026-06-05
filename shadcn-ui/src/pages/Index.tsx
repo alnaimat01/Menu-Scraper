@@ -17,6 +17,8 @@ export default function Index() {
   const [restaurantName, setRestaurantName] = useState('');
   const [restaurantId, setRestaurantId] = useState('');
   const [sourceCode, setSourceCode] = useState('');
+  const [talabatUrl, setTalabatUrl] = useState('');
+  const [isFetchingSource, setIsFetchingSource] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [extractedCount, setExtractedCount] = useState(0);
@@ -149,6 +151,60 @@ for (const item of items) {
     }
   }, [restaurantName, restaurantId, sourceCode]);
 
+  const handleGetSource = useCallback(async () => {
+  if (!talabatUrl.trim()) {
+    toast.error('Please enter Talabat URL');
+    return;
+  }
+
+  setIsFetchingSource(true);
+
+  try {
+    const response = await fetch('https://menu-scraper1.onrender.com/fetch', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url: talabatUrl.trim() }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.success) {
+      throw new Error(data.error || 'Failed to fetch source code');
+    }
+
+    setSourceCode(data.html || '');
+
+    const idMatch = talabatUrl.match(/\/restaurant\/(\d+)/);
+    if (idMatch?.[1]) {
+      setRestaurantId(idMatch[1]);
+    }
+
+    const nameFromUrl = talabatUrl
+      .split('/')
+      .filter(Boolean)
+      .pop()
+      ?.split('?')[0]
+      ?.replace(/-/g, ' ')
+      ?.trim();
+
+    if (nameFromUrl) {
+      setRestaurantName(nameFromUrl);
+    }
+
+    toast.success('Source code loaded successfully');
+  } catch (error) {
+    console.error('Error fetching source:', error);
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    toast.error('Failed to fetch source code', {
+      description: message
+    });
+  } finally {
+    setIsFetchingSource(false);
+  }
+}, [talabatUrl]);
+
   const clearAll = useCallback(() => {
     setRestaurantName('');
     setRestaurantId('');
@@ -232,6 +288,37 @@ for (const item of items) {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
+              
+              {/* Talabat URL */}
+<div className="space-y-2">
+  <Label htmlFor="talabat-url" className="text-sm font-semibold">
+    رابط طلبات
+  </Label>
+  <div className="flex gap-3">
+    <Input
+      id="talabat-url"
+      placeholder="https://www.talabat.com/kuwait/restaurant/667425/..."
+      value={talabatUrl}
+      onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTalabatUrl(e.target.value)}
+      className="h-11 flex-1"
+      dir="ltr"
+    />
+    <Button
+      onClick={handleGetSource}
+      disabled={isFetchingSource || !talabatUrl.trim()}
+      className="h-11 bg-green-600 hover:bg-green-700"
+    >
+      {isFetchingSource ? (
+        <>
+          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          Loading...
+        </>
+      ) : (
+        'Get Source'
+      )}
+    </Button>
+  </div>
+</div>
               
               {/* Restaurant Name */}
               <div className="space-y-2">

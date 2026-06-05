@@ -102,7 +102,7 @@ app.post('/fetch', async (req, res) => {
         'Sec-Fetch-Site': 'none',
         'Cache-Control': 'max-age=0'
       },
-      timeout: 30000 // 30 second timeout
+      timeout: 10000 // Source code fetch timeout (10 seconds)
     });
     
     if (!response.ok) {
