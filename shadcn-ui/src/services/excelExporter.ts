@@ -42,7 +42,7 @@ export class ExcelExporter {
     const cleanName = name.trim().toLowerCase();
 
     return (
-      /^(\d+(\.\d+)?|\d+\/\d+)\s*(g|gm|gram|grams|kg|kilo|kilogram|kilograms)$/.test(cleanName) ||
+      /^(\d+(\.\d+)?|\d+\/\d+)\s*(g|gm|gram|grams|kg|kilo|kilogram|kilograms|oz|ounce|ounces|l|liter|litre|liters|litres|gallon|gallons|galon)$/.test(cleanName) ||
       /^(half|quarter)\s*(kg|kilo|kilogram)$/.test(cleanName) ||
       /^(\d+)\s*(pc|pcs|piece|pieces)$/.test(cleanName) ||
       /^(نص|نصف|ربع)\s*(كيلو|كجم|kg)$/.test(cleanName) ||
@@ -127,11 +127,7 @@ const getUniqueGroupName = (group: any) => {
 
   return !(
     categoryName.includes('picks for you') ||
-    categoryName.includes('offer') ||
-    categoryName.includes('offers') ||
     categoryName.includes('اختيارات على ذوقك') ||
-    categoryName.includes('عروض') ||
-    categoryName.includes('العروض')
   );
 });
     const worksheetData = [
