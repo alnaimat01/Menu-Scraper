@@ -127,7 +127,7 @@ const getUniqueGroupName = (group: any) => {
 
   return !(
     categoryName.includes('picks for you') ||
-    categoryName.includes('اختيارات على ذوقك') ||
+    categoryName.includes('اختيارات على ذوقك')
   );
 });
     const worksheetData = [
