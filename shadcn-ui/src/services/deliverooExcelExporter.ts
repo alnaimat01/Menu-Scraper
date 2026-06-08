@@ -56,9 +56,23 @@ export class DeliverooExcelExporter {
 
     if (!optionName) return false;
 
-    const hasClearSizeWord = clearSizeWords.some(keyword =>
-      optionName === keyword || optionName.includes(keyword)
-    );
+  // Only treat Small / Medium / Large style options as sizes
+  // when the option itself represents a size.
+  // Prevents false size detection for options such as:
+  // "Natural-Cut French Fries - Medium"
+  // "Beef Burger - Large"
+  // "Chicken Wrap - Small"
+  // These are modifier options, not actual size options.
+
+    const hasClearSizeWord = clearSizeWords.some(keyword => {
+      const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+  return (
+    optionName === keyword ||
+    new RegExp(`^${escapedKeyword}\\s*\\d*$`).test(optionName) ||
+    new RegExp(`^\\d+\\s*${escapedKeyword}$`).test(optionName)
+  );
+});
 
     return hasClearSizeWord || isPureWeightOrPieces(optionName);
   }).length;
