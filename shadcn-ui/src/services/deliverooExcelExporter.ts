@@ -1,15 +1,9 @@
 import * as XLSX from 'xlsx-js-style';
 import { ParsedMenuItem } from './sourceCodeParser';
 
-export class ExcelExporter {
-  private capitalizeText(value: any): string {
-  if (value === undefined || value === null) return '';
-
-  return String(value)
-    .toLowerCase()
-    .replace(/\b\w/g, char => char.toUpperCase());
-}
+export class DeliverooExcelExporter {
   private isSizeGroup(group: any): boolean {
+    
   const groupName = String(group.sectionName || group.name || group.title || '').toLowerCase();
 
   const groupNameLooksLikeSize =
@@ -19,7 +13,7 @@ export class ExcelExporter {
 
   if (groupNameLooksLikeSize) return true;
 
-  const options = group.choices || group.options || group.modifiers || [];
+  const options = group.choices || group.options || group.modifierOptions || group.modifiers || [];
   if (!options.length) return false;
 
   const clearSizeWords = [
@@ -69,23 +63,15 @@ export class ExcelExporter {
     return hasClearSizeWord || isPureWeightOrPieces(optionName);
   }).length;
 
-  if (sizeLikeOptionsCount >= Math.ceil(options.length * 0.7)) return true;
+  return sizeLikeOptionsCount >= Math.ceil(options.length * 0.7);
+}
 
-const optionNames = options
-  .map((option: any) => String(option.name || option.title || '').toLowerCase().trim())
-  .filter(Boolean);
+private capitalizeText(value: any): string {
+  if (value === undefined || value === null) return '';
 
-const allOptionsLookLikeSizes =
-  optionNames.length > 0 &&
-  optionNames.every(name => {
-    const hasClearSizeWord = clearSizeWords.some(keyword =>
-      name === keyword || name.includes(keyword)
-    );
-
-    return hasClearSizeWord || isPureWeightOrPieces(name);
-  });
-
-return allOptionsLookLikeSizes;
+  return String(value)
+    .toLowerCase()
+    .replace(/\b\w/g, char => char.toUpperCase());
 }
 
 private calculateFinalSizePrice(itemPrice: any, sizePrice: any): string {
@@ -94,6 +80,7 @@ private calculateFinalSizePrice(itemPrice: any, sizePrice: any): string {
 
   return String(Number((base + extra).toFixed(3)));
 }
+
   exportToExcel(items: ParsedMenuItem[], restaurantName: string, restaurantId: string): void {
     console.log('📊 Generating Excel file...');
     console.log(`📝 Total items: ${items.length}`);
@@ -106,7 +93,7 @@ private calculateFinalSizePrice(itemPrice: any, sizePrice: any): string {
 
 const getGroupSignature = (group: any) => {
   const groupName = getGroupBaseName(group);
-  const options = group.choices || group.options || group.modifiers || [];
+  const options = group.choices || group.options || group.modifierOptions || group.modifiers || [];
 
   const optionsSignature = options
     .map((option: any) => [
@@ -118,8 +105,8 @@ const getGroupSignature = (group: any) => {
 
   return [
     groupName,
-    group.minQuantity ?? group.min ?? '',
-    group.maxQuantity ?? group.max ?? '',
+    group.minQuantity ?? group.min ?? group.minSelection ?? '',
+    group.maxQuantity ?? group.max ?? group.maxSelection ?? '',
     optionsSignature
   ].join('###');
 };
@@ -177,7 +164,11 @@ const getUniqueGroupName = (group: any) => {
     this.isSizeGroup(group)
   );
 
-  const sizeOptions = sizeGroup?.choices || [];
+  const sizeOptions =
+  sizeGroup?.choices ||
+  sizeGroup?.options ||
+  sizeGroup?.modifierOptions ||
+  [];
 
   if (sizeOptions.length === 0) {
     return [[
@@ -191,12 +182,12 @@ const getUniqueGroupName = (group: any) => {
   }
 
  return sizeOptions.map((sizeOption: any) => [
-  this.capitalizeText(item.category),
-  this.capitalizeText(item.itemName),
-  this.capitalizeText(sizeOption.name || ''),
-  String(this.calculateFinalSizePrice(item.price, sizeOption.price)),
-  this.capitalizeText(item.description),
-  this.capitalizeText(choiceGroupNames)
+    this.capitalizeText(item.category),
+    this.capitalizeText(item.itemName),
+    this.capitalizeText(sizeOption.name || ''),
+    String(this.calculateFinalSizePrice(item.price, sizeOption.price)),
+    this.capitalizeText(item.description),
+    this.capitalizeText(choiceGroupNames)
 ]);
 })
     ];
@@ -220,6 +211,7 @@ for (let row = 2; row <= worksheetData.length; row++) {
   }
 }
     const modifiersMap = new Map<string, any[]>();
+    const writtenModifierGroups = new Set<string>();
 
 items.forEach(item => {
   if (!item.modifiers || item.modifiers.length === 0) return;
@@ -227,21 +219,29 @@ items.forEach(item => {
   item.modifiers
     .filter((group: any) => !this.isSizeGroup(group))
     .forEach((group: any) => {
-      const options = group.choices || group.options || group.modifiers || [];
+      const options = group.choices || group.options || group.modifierOptions || group.modifiers || [];
 
-      options.forEach((option: any) => {
-        const row = [
-          getUniqueGroupName(group),
-          option.name || option.title || '',
-          option.price ?? '',
-          option.oldPrice === -1 ? '' : (option.oldPrice ?? ''),
-          group.minQuantity ?? group.min ?? '',
-          group.maxQuantity ?? group.max ?? ''
-        ];
+      const groupSignature = getGroupSignature(group);
 
-        const key = row.join('||');
-        modifiersMap.set(key, row);
-      });
+if (writtenModifierGroups.has(groupSignature)) {
+  return;
+}
+
+writtenModifierGroups.add(groupSignature);
+
+options.forEach((option: any) => {
+  const row = [
+    getUniqueGroupName(group),
+    option.name || option.title || '',
+    option.price ?? '',
+    option.oldPrice === -1 ? '' : (option.oldPrice ?? ''),
+    group.minQuantity ?? group.min ?? group.minSelection ?? '',
+    group.maxQuantity ?? group.max ?? group.maxSelection ?? ''
+  ];
+
+  const key = row.join('||');
+  modifiersMap.set(key, row);
+});
     });
 });
 
