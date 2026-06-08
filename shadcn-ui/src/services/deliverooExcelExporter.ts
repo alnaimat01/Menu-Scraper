@@ -91,22 +91,45 @@ private calculateFinalSizePrice(itemPrice: any, sizePrice: any): string {
     const getGroupBaseName = (group: any) =>
   group.sectionName || group.name || group.title || '';
 
+const normalizeText = (value: any) =>
+  String(value ?? '').trim().toLowerCase().replace(/\s+/g, ' ');
+
+const normalizePrice = (value: any) => {
+  if (value === undefined || value === null || value === '') return '';
+  const num = Number(value);
+  return isNaN(num) ? normalizeText(value) : String(num);
+};
+
+// Generate a unique signature for each modifier group.
+// Prevents duplicate groups by comparing:
+// - Group name
+// - Min / Max selection
+// - Option names
+// - Option prices
+// Ignores:
+// - Extra spaces
+// - Upper/lower case differences
+// - Different option order
+
+
+
 const getGroupSignature = (group: any) => {
-  const groupName = getGroupBaseName(group);
+  const groupName = normalizeText(getGroupBaseName(group));
   const options = group.choices || group.options || group.modifierOptions || group.modifiers || [];
 
   const optionsSignature = options
     .map((option: any) => [
-      option.name || option.title || '',
-      option.price ?? '',
-      option.oldPrice === -1 ? '' : (option.oldPrice ?? '')
+      normalizeText(option.name || option.title || ''),
+      normalizePrice(option.price),
+      normalizePrice(option.oldPrice === -1 ? '' : option.oldPrice)
     ].join('|'))
+    .sort()
     .join('||');
 
   return [
     groupName,
-    group.minQuantity ?? group.min ?? group.minSelection ?? '',
-    group.maxQuantity ?? group.max ?? group.maxSelection ?? '',
+    normalizePrice(group.minQuantity ?? group.min ?? group.minSelection ?? ''),
+    normalizePrice(group.maxQuantity ?? group.max ?? group.maxSelection ?? ''),
     optionsSignature
   ].join('###');
 };
