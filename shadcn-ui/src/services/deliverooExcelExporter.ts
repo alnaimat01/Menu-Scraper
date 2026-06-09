@@ -213,8 +213,8 @@ const getUniqueGroupName = (group: any) => {
   this.capitalizeText(item.itemName),
   this.capitalizeText(item.size),
   String(item.price),
-  this.capitalizeText(item.description),
-  this.capitalizeText(choiceGroupNames)
+  item.description,
+  choiceGroupNames
 ]];
   }
 
@@ -223,8 +223,8 @@ const getUniqueGroupName = (group: any) => {
     this.capitalizeText(item.itemName),
     this.capitalizeText(sizeOption.name || ''),
     String(this.calculateFinalSizePrice(item.price, sizeOption.price)),
-    this.capitalizeText(item.description),
-    this.capitalizeText(choiceGroupNames)
+    item.description,
+    choiceGroupNames
 ]);
 })
     ];
