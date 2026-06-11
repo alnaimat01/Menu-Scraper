@@ -3,47 +3,53 @@ import { ParsedMenuItem } from './sourceCodeParser';
 
 export class DeliverooExcelExporter {
   private isSizeGroup(group: any): boolean {
-    
-  const groupName = String(group.sectionName || group.name || group.title || '').toLowerCase();
+  const groupName = String(group.sectionName || group.name || group.title || '').trim().toLowerCase();
 
   const groupNameLooksLikeSize =
-    groupName.includes('size') ||
-    groupName.includes('حجم') ||
-    groupName.includes('الحجم');
+    groupName === 'size' ||
+    groupName === 'sizes' ||
+    groupName === 'حجم' ||
+    groupName === 'الحجم';
 
   if (groupNameLooksLikeSize) return true;
 
   const options = group.choices || group.options || group.modifierOptions || group.modifiers || [];
   if (!options.length) return false;
 
-  const clearSizeWords = [
-  'small',
-  'medium',
-  'large',
-  'regular',
-  'family',
-  'single',
-  'double',
-  'triple',
-  'half',
-  'quarter',
-  'full',
-
-  'صغير',
-  'وسط',
-  'كبير',
-  'عائلي',
-  'نصف',
-  'نص',
-  'ربع',
-  'كامل'
-];
+  const sizeWords = [
+    'small',
+    'medium',
+    'large',
+    'regular',
+    'family',
+    'single',
+    'double',
+    'triple',
+    'half',
+    'quarter',
+    'full',
+    'xs',
+    's',
+    'm',
+    'l',
+    'xl',
+    'xxl',
+    'xxxl',
+    'صغير',
+    'وسط',
+    'كبير',
+    'عائلي',
+    'نصف',
+    'نص',
+    'ربع',
+    'كامل'
+  ];
 
   const isPureWeightOrPieces = (name: string) => {
     const cleanName = name.trim().toLowerCase();
 
     return (
-      /^(\d+(\.\d+)?|\d+\/\d+)\s*(g|gm|gram|grams|kg|kilo|kilogram|kilograms|oz|ounce|ounces|l|liter|litre|liters|litres|gallon|gallons|galon)$/.test(cleanName) ||
+      /^(\d+(\.\d+)?|\d+\/\d+)\s*(g|gm|gram|grams|kg|kilo|kilogram|kilograms|oz|ounce|ounces|l|liter|litre|liters|litres|ml|gallon|gallons|galon)$/.test(cleanName) ||
       /^(half|quarter)\s*(kg|kilo|kilogram)$/.test(cleanName) ||
       /^(\d+)\s*(pc|pcs|piece|pieces)$/.test(cleanName) ||
       /^(نص|نصف|ربع)\s*(كيلو|كجم|kg)$/.test(cleanName) ||
@@ -51,33 +57,32 @@ export class DeliverooExcelExporter {
     );
   };
 
-  const sizeLikeOptionsCount = options.filter((option: any) => {
-    const optionName = String(option.name || option.title || '').toLowerCase().trim();
+  const isPureSizeName = (name: string) => {
+    const cleanName = name.trim().toLowerCase();
 
-    if (!optionName) return false;
+    if (!cleanName) return false;
 
-  // Only treat Small / Medium / Large style options as sizes
-  // when the option itself represents a size.
-  // Prevents false size detection for options such as:
-  // "Natural-Cut French Fries - Medium"
-  // "Beef Burger - Large"
-  // "Chicken Wrap - Small"
-  // These are modifier options, not actual size options.
+    if (sizeWords.includes(cleanName)) return true;
 
-    const hasClearSizeWord = clearSizeWords.some(keyword => {
-      const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const sizeWithMeasureRegex =
+      /^(small|medium|large|regular|family|single|double|triple|half|quarter|full|xs|s|m|l|xl|xxl|xxxl)\s*(\(?\d+(\.\d+)?\s*(ml|l|liter|litre|oz|g|gm|gram|kg|piece|pieces|pc|pcs)\)?)$/;
 
-  return (
-    optionName === keyword ||
-    new RegExp(`^${escapedKeyword}\\s*\\d*$`).test(optionName) ||
-    new RegExp(`^\\d+\\s*${escapedKeyword}$`).test(optionName)
-  );
-});
+    if (sizeWithMeasureRegex.test(cleanName)) return true;
 
-    return hasClearSizeWord || isPureWeightOrPieces(optionName);
-  }).length;
+    return isPureWeightOrPieces(cleanName);
+  };
 
-  return sizeLikeOptionsCount >= Math.ceil(options.length * 0.7);
+  const optionNames = options
+    .map((option: any) => String(option.name || option.title || '').trim())
+    .filter(Boolean);
+
+  if (optionNames.length === 0) return false;
+
+  const sizeCount = optionNames.filter((name: string) =>
+    isPureSizeName(name)
+  ).length;
+
+  return sizeCount >= Math.ceil(optionNames.length * 0.7);
 }
 
 private capitalizeText(value: any): string {

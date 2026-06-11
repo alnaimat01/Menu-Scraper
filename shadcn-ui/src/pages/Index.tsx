@@ -3,9 +3,10 @@ import { Button } from '@/components/ui/button';
 import { FileSpreadsheet } from 'lucide-react';
 import { TalabatScraper } from '@/components/TalabatScraper';
 import { DeliverooScraper } from '@/components/DeliverooScraper';
+import { NoonFoodScraper } from '@/components/NoonFoodScraper';
 
 export default function Index() {
-  const [activeTab, setActiveTab] = useState<'talabat' | 'deliveroo'>('talabat');
+  const [activeTab, setActiveTab] = useState<'talabat' | 'deliveroo' | 'noon'>('talabat');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50">
@@ -38,10 +39,17 @@ export default function Index() {
             >
               Deliveroo
             </Button>
+            <Button
+                 variant={activeTab === 'noon' ? 'default' : 'outline'}
+                 onClick={() => setActiveTab('noon')}
+              >
+                Noon Food
+              </Button>
           </div>
 
           {activeTab === 'talabat' && <TalabatScraper />}
           {activeTab === 'deliveroo' && <DeliverooScraper />}
+          {activeTab === 'noon' && <NoonFoodScraper />}   
         </div>
       </div>
     </div>

@@ -9,47 +9,54 @@ export class ExcelExporter {
     .toLowerCase()
     .replace(/\b\w/g, char => char.toUpperCase());
 }
-  private isSizeGroup(group: any): boolean {
+ private isSizeGroup(group: any): boolean {
   const groupName = String(group.sectionName || group.name || group.title || '').toLowerCase();
 
   const groupNameLooksLikeSize =
-    groupName.includes('size') ||
-    groupName.includes('حجم') ||
-    groupName.includes('الحجم');
+    groupName === 'size' ||
+    groupName === 'sizes' ||
+    groupName === 'حجم' ||
+    groupName === 'الحجم';
 
   if (groupNameLooksLikeSize) return true;
 
   const options = group.choices || group.options || group.modifiers || [];
   if (!options.length) return false;
 
-  const clearSizeWords = [
-  'small',
-  'medium',
-  'large',
-  'regular',
-  'family',
-  'single',
-  'double',
-  'triple',
-  'half',
-  'quarter',
-  'full',
-
-  'صغير',
-  'وسط',
-  'كبير',
-  'عائلي',
-  'نصف',
-  'نص',
-  'ربع',
-  'كامل'
-];
+  const sizeWords = [
+    'small',
+    'medium',
+    'large',
+    'regular',
+    'family',
+    'single',
+    'double',
+    'triple',
+    'half',
+    'quarter',
+    'full',
+    'xs',
+    's',
+    'm',
+    'l',
+    'xl',
+    'xxl',
+    'xxxl',
+    'صغير',
+    'وسط',
+    'كبير',
+    'عائلي',
+    'نصف',
+    'نص',
+    'ربع',
+    'كامل'
+  ];
 
   const isPureWeightOrPieces = (name: string) => {
     const cleanName = name.trim().toLowerCase();
 
     return (
-      /^(\d+(\.\d+)?|\d+\/\d+)\s*(g|gm|gram|grams|kg|kilo|kilogram|kilograms|oz|ounce|ounces|l|liter|litre|liters|litres|gallon|gallons|galon)$/.test(cleanName) ||
+      /^(\d+(\.\d+)?|\d+\/\d+)\s*(g|gm|gram|grams|kg|kilo|kilogram|kilograms|oz|ounce|ounces|l|liter|litre|liters|litres|ml|gallon|gallons|galon)$/.test(cleanName) ||
       /^(half|quarter)\s*(kg|kilo|kilogram)$/.test(cleanName) ||
       /^(\d+)\s*(pc|pcs|piece|pieces)$/.test(cleanName) ||
       /^(نص|نصف|ربع)\s*(كيلو|كجم|kg)$/.test(cleanName) ||
@@ -57,35 +64,32 @@ export class ExcelExporter {
     );
   };
 
-  const sizeLikeOptionsCount = options.filter((option: any) => {
-    const optionName = String(option.name || option.title || '').toLowerCase().trim();
+  const isPureSizeName = (name: string) => {
+    const cleanName = name.trim().toLowerCase();
 
-    if (!optionName) return false;
+    if (!cleanName) return false;
 
-    const hasClearSizeWord = clearSizeWords.some(keyword =>
-      optionName === keyword || optionName.includes(keyword)
-    );
+    if (sizeWords.includes(cleanName)) return true;
 
-    return hasClearSizeWord || isPureWeightOrPieces(optionName);
-  }).length;
+    const sizeWithMeasureRegex =
+      /^(small|medium|large|regular|family|single|double|triple|half|quarter|full|xs|s|m|l|xl|xxl|xxxl)\s*(\(?\d+(\.\d+)?\s*(ml|l|liter|litre|oz|g|gm|gram|kg|piece|pieces|pc|pcs)\)?)$/;
 
-  if (sizeLikeOptionsCount >= Math.ceil(options.length * 0.7)) return true;
+    if (sizeWithMeasureRegex.test(cleanName)) return true;
 
-const optionNames = options
-  .map((option: any) => String(option.name || option.title || '').toLowerCase().trim())
-  .filter(Boolean);
+    return isPureWeightOrPieces(cleanName);
+  };
 
-const allOptionsLookLikeSizes =
-  optionNames.length > 0 &&
-  optionNames.every(name => {
-    const hasClearSizeWord = clearSizeWords.some(keyword =>
-      name === keyword || name.includes(keyword)
-    );
+  const optionNames = options
+    .map((option: any) => String(option.name || option.title || '').trim())
+    .filter(Boolean);
 
-    return hasClearSizeWord || isPureWeightOrPieces(name);
-  });
+  if (optionNames.length === 0) return false;
 
-return allOptionsLookLikeSizes;
+  const sizeCount = optionNames.filter((name: string) =>
+    isPureSizeName(name)
+  ).length;
+
+  return sizeCount >= Math.ceil(optionNames.length * 0.7);
 }
 
 private calculateFinalSizePrice(itemPrice: any, sizePrice: any): string {

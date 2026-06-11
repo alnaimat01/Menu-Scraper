@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const fetch = require('node-fetch');
 const path = require('path');
-
 const app = express();
 const PORT = 3001;
 
@@ -76,6 +75,172 @@ app.get('/choices', async (req, res) => {
   }
 });
 
+// Noon Food menu proxy endpoint
+// Noon Food menu proxy endpoint - whoami session based
+app.post('/noon-food', async (req, res) => {
+  try {
+    const { outletCode } = req.body;
+
+    if (!outletCode) {
+      return res.status(400).json({
+        success: false,
+        error: 'outletCode is required'
+      });
+    }
+
+    const visitorId = '259ae51c-63ff-4f5e-942c-7e8b3c1c7e42';
+
+    const locationCookie =
+      'x-location-food-ae=eyJsYXQiOiAyNDM4NDkzNzYsICJsbmciOiA1NDYxOTkwMTIsICJhcmVhIjogIjkgLSBBbCBXYWhkYWggU3QgLSBaYXllZCBDaXR5IC0gXHUwNjIzXHUwNjI4XHUwNjQ4XHUwNjM4XHUwNjI4XHUwNjRhIn0';
+
+    const baseCookie = [
+      `visitor_id=${visitorId}`,
+      locationCookie,
+      'dcae=2',
+      'x-available-ae=ecom-food'
+    ].join('; ');
+
+    const outletPageUrl = `https://food.noon.com/uae-en/outlet/${outletCode}/`;
+    const whoamiUrl = 'https://food.noon.com/_svc/whoami-v1/whoami';
+    const menuApiUrl = 'https://food.noon.com/_svc/mp-food-api-mpnoon/consumer/restaurant/outlet/details/guest';
+
+    console.log('👤 Noon whoami session request...');
+
+    const whoamiResponse = await fetch(whoamiUrl, {
+      method: 'GET',
+      headers: {
+        'accept': 'application/json, text/plain, */*',
+        'accept-language': 'en-US,en;q=0.9,ar-JO;q=0.8,ar-AE;q=0.7,ar;q=0.6,bg;q=0.5',
+        'cache-control': 'no-cache, max-age=0, must-revalidate, no-store',
+        'cookie': baseCookie,
+        'pragma': 'no-cache',
+        'referer': outletPageUrl,
+        'sec-ch-ua': '"Google Chrome";v="141", "Not?A_Brand";v="8", "Chromium";v="141"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
+        'x-content': 'desktop',
+        'x-experience': 'food',
+        'x-locale': 'en-ae',
+        'x-mp': 'noon',
+        'x-platform': 'web',
+        'x-visitor-id': visitorId
+      }
+    });
+
+    console.log('👤 whoami status:', whoamiResponse.status);
+
+    const rawSetCookie = whoamiResponse.headers.get('set-cookie') || '';
+
+const guestMatch = rawSetCookie.match(/nguestv2=([^;]+)/);
+const availableMatch = rawSetCookie.match(/x-available-ae=([^;]+)/);
+
+const whoamiCookies = [];
+
+if (availableMatch) {
+  whoamiCookies.push(`x-available-ae=${availableMatch[1]}`);
+}
+
+if (guestMatch) {
+  whoamiCookies.push(`nguestv2=${guestMatch[1]}`);
+}
+
+
+    const finalCookie = [
+      baseCookie,
+      ...whoamiCookies
+    ].join('; ');
+
+    const hasGuestToken = finalCookie.includes('nguestv2=');
+
+    if (!hasGuestToken) {
+      return res.status(500).json({
+        success: false,
+        error: 'whoami did not return nguestv2 cookie'
+      });
+    }
+
+    console.log('📦 Fetching Noon menu API:', outletCode);
+
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+    const menuResponse = await fetch(menuApiUrl, {
+      method: 'POST',
+      signal: controller.signal,
+      headers: {
+        'accept': 'application/json, text/plain, */*',
+        'accept-language': 'en-US,en;q=0.9,ar-JO;q=0.8,ar-AE;q=0.7,ar;q=0.6,bg;q=0.5',
+        'cache-control': 'no-cache, max-age=0, must-revalidate, no-store',
+        'content-type': 'application/json',
+        'cookie': finalCookie,
+        'origin': 'https://food.noon.com',
+        'pragma': 'no-cache',
+        'referer': outletPageUrl,
+        'sec-ch-ua': '"Google Chrome";v="141", "Not?A_Brand";v="8", "Chromium";v="141"',
+        'sec-ch-ua-mobile': '?0',
+        'sec-ch-ua-platform': '"Windows"',
+        'sec-fetch-dest': 'empty',
+        'sec-fetch-mode': 'cors',
+        'sec-fetch-site': 'same-origin',
+        'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
+        'x-content': 'desktop',
+        'x-experience': 'food',
+        'x-locale': 'en-ae',
+        'x-mp': 'noon',
+        'x-platform': 'web',
+        'x-visitor-id': visitorId
+      },
+      body: JSON.stringify({
+        addressLat: 243849376,
+        addressLng: 546199012,
+        deliveryType: 'default',
+        outletCode
+      })
+    });
+
+    clearTimeout(timeoutId);
+
+    console.log('📥 menu status:', menuResponse.status);
+
+    const data = await menuResponse.json();
+
+    if (!menuResponse.ok || data.status !== 'success') {
+      console.error('❌ Noon menu API error:', data);
+
+      return res.status(menuResponse.status || 500).json({
+        success: false,
+        error: data.message || data.error || `HTTP ${menuResponse.status}`
+      });
+    }
+
+    const mainItemsCount =
+      data?.data?.menu?.items?.filter((item) => item.itemType === 'main')?.length || 0;
+
+    console.log(`✅ Noon Food menu fetched: ${outletCode} - ${mainItemsCount} main items`);
+
+    res.json({
+      success: true,
+      data: data.data
+    });
+
+  } catch (error) {
+    console.error('❌ Noon Food proxy error:', error.message);
+
+    const isTimeout = error.name === 'AbortError';
+
+    res.status(500).json({
+      success: false,
+      error: isTimeout
+        ? 'Noon Food request timed out after whoami.'
+        : error.message,
+      type: error.name
+    });
+  }
+});
 // Main proxy endpoint
 app.post('/fetch', async (req, res) => {
   try {
