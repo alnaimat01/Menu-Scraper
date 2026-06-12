@@ -19,7 +19,7 @@ export function NoonFoodScraper() {
     const cleanUrl = url.trim();
 
     const outletMatch = cleanUrl.match(/\/outlet\/([^/?#]+)/i);
-   if (outletMatch?.[1]) {
+    if (outletMatch?.[1]) {
       const outletCode = outletMatch[1].match(/^[A-Z0-9]+/i);
       return outletCode?.[0] || null;
     }
@@ -86,55 +86,55 @@ export function NoonFoodScraper() {
   };
 
   const handleNoonExtract = () => {
-  if (!noonMenuData) {
-    toast.error('Please fetch Noon Food menu first');
-    return;
-  }
-
-  try {
-    const parser = new NoonFoodParser();
-    const items = parser.parse(noonMenuData);
-    const sizeKeywordGroups = items.flatMap(item =>
-  (item.modifiers || [])
-    .filter(group =>
-      (group.choices || []).some(option =>
-        /small|medium|large|300|ml|litre|liter/i.test(option.name || '')
-      )
-    )
-    .map(group => ({
-      itemName: item.itemName,
-      groupName: group.name,
-      choices: group.choices
-    }))
-);
-
-console.log('Possible size groups:', JSON.stringify(sizeKeywordGroups, null, 2));
-
-    if (items.length === 0) {
-      toast.error('No Noon Food items found');
+    if (!noonMenuData) {
+      toast.error('Please fetch Noon Food menu first');
       return;
     }
 
-    const exporter = new NoonFoodExcelExporter();
+    try {
+      const parser = new NoonFoodParser();
+      const items = parser.parse(noonMenuData);
+      const sizeKeywordGroups = items.flatMap(item =>
+        (item.modifiers || [])
+          .filter(group =>
+            (group.choices || []).some(option =>
+              /small|medium|large|300|ml|litre|liter/i.test(option.name || '')
+            )
+          )
+          .map(group => ({
+            itemName: item.itemName,
+            groupName: group.name,
+            choices: group.choices
+          }))
+      );
 
-    exporter.exportToExcel(
-      items,
-      restaurantName.trim() || noonMenuData.name || 'Noon Food Menu',
-      noonMenuData.outletCode || 'noon-food'
-    );
+      console.log('Possible size groups:', JSON.stringify(sizeKeywordGroups, null, 2));
 
-    toast.success(`تم استخراج ${items.length} عنصر من Noon Food بنجاح`);
-    console.log('Noon Food parsed sample:', items.slice(0, 5));
-  } catch (error) {
-    console.error('Noon Food extraction error:', error);
+      if (items.length === 0) {
+        toast.error('No Noon Food items found');
+        return;
+      }
 
-    const message = error instanceof Error ? error.message : 'Unknown error';
+      const exporter = new NoonFoodExcelExporter();
 
-    toast.error('فشل استخراج Noon Food', {
-      description: message,
-    });
-  }
-};
+      exporter.exportToExcel(
+        items,
+        restaurantName.trim() || noonMenuData.name || 'Noon Food Menu',
+        noonMenuData.outletCode || 'noon-food'
+      );
+
+      toast.success(`تم استخراج ${items.length} عنصر من Noon Food بنجاح`);
+      console.log('Noon Food parsed sample:', items.slice(0, 5));
+    } catch (error) {
+      console.error('Noon Food extraction error:', error);
+
+      const message = error instanceof Error ? error.message : 'Unknown error';
+
+      toast.error('فشل استخراج Noon Food', {
+        description: message,
+      });
+    }
+  };
   const clearAll = () => {
     setNoonUrl('');
     setRestaurantName('');

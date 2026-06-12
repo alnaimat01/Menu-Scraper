@@ -119,11 +119,11 @@ export class SourceCodeParser {
       // Navigate through Next.js data structure to find menu
       const props = data?.props as Record<string, unknown> | undefined;
       const pageProps = (props?.pageProps || props?.initialState || {}) as Record<string, unknown>;
-      
+
       // For Talabat: Look for initialMenuState.menuData
       const initialMenuState = pageProps?.initialMenuState as Record<string, unknown> | undefined;
       const menuData = initialMenuState?.menuData as Record<string, unknown> | undefined;
-      
+
       if (!menuData) {
         console.log('⚠️ No menuData found in __NEXT_DATA__');
         return items;
@@ -131,7 +131,7 @@ export class SourceCodeParser {
 
       // Extract from menuData.items array (Talabat structure)
       const menuItems = menuData.items as Array<Record<string, unknown>> | undefined;
-      
+
       if (!menuItems || !Array.isArray(menuItems)) {
         console.log('⚠️ No items array found in menuData');
         return items;
@@ -146,14 +146,14 @@ export class SourceCodeParser {
           itemName: (item.name as string) || 'Unknown Item',
           description: (item.description as string) || '',
           price: this.formatPrice(this.getValidPrice(
-  item.basePrice,
-  item.originalPrice,
-  item.oldPrice,
-  item.price
-)),          size: '',
-choiceGroups: (item.hasChoices as boolean) ? 'Has choices (details not available in menu list)' : '',
-itemId: item.id as string | number,
-modifiers: []
+            item.basePrice,
+            item.originalPrice,
+            item.oldPrice,
+            item.price
+          )), size: '',
+          choiceGroups: (item.hasChoices as boolean) ? 'Has choices (details not available in menu list)' : '',
+          itemId: item.id as string | number,
+          modifiers: []
         };
 
         items.push(menuItem);
@@ -197,7 +197,7 @@ modifiers: []
 
       // Look for menu in various locations
       const menu = (
-        data?.menu || 
+        data?.menu ||
         (data?.restaurant as Record<string, unknown> | undefined)?.menu ||
         data?.menuData ||
         (data?.data as Record<string, unknown> | undefined)?.menu
@@ -210,7 +210,7 @@ modifiers: []
 
       // Extract items (similar to __NEXT_DATA__)
       const categories = menu.categories || menu.menuCategories || [];
-      
+
       for (const category of categories) {
         const categoryName = category.name || category.title || 'Uncategorized';
         const categoryItems = category.items || category.menuItems || [];
@@ -220,16 +220,16 @@ modifiers: []
             category: categoryName,
             itemName: item.name || item.title || 'Unknown Item',
             description: item.description || item.desc || '',
-price: this.formatPrice(this.getValidPrice(
-  item.basePrice,
-  (item as any).originalPrice,
-  (item as any).oldPrice,
-  item.price
-)), 
-           size: this.extractSize(item),
-        choiceGroups: this.extractChoiceGroups(item),
-itemId: (item as any).id,
-modifiers: []
+            price: this.formatPrice(this.getValidPrice(
+              item.basePrice,
+              (item as any).originalPrice,
+              (item as any).oldPrice,
+              item.price
+            )),
+            size: this.extractSize(item),
+            choiceGroups: this.extractChoiceGroups(item),
+            itemId: (item as any).id,
+            modifiers: []
           };
 
           items.push(menuItem);
@@ -369,14 +369,14 @@ modifiers: []
                 itemName: (itemObj.name as string) || (itemObj.title as string) || 'Unknown Item',
                 description: (itemObj.description as string) || (itemObj.desc as string) || '',
                 price: this.formatPrice(this.getValidPrice(
-  itemObj.basePrice,
-  itemObj.originalPrice,
-  itemObj.oldPrice,
-  itemObj.price
-)),
+                  itemObj.basePrice,
+                  itemObj.originalPrice,
+                  itemObj.oldPrice,
+                  itemObj.price
+                )),
                 size: this.extractSize(itemObj as MenuItem),
                 choiceGroups: this.extractChoiceGroups(itemObj as MenuItem),
-               itemId: (itemObj as any).id,
+                itemId: (itemObj as any).id,
                 modifiers: []
               };
               items.push(menuItem);
@@ -415,43 +415,43 @@ modifiers: []
 
   private formatPrice(price: number | string | undefined): string {
     if (!price) return '0.000';
-    
+
     const numPrice = typeof price === 'number' ? price : parseFloat(String(price));
-    
+
     if (isNaN(numPrice)) return '0.000';
-    
+
     return String(numPrice);
   }
   private getValidPrice(...prices: unknown[]): number {
-  for (const price of prices) {
-    const value =
-      typeof price === 'string'
-        ? parseFloat(price)
-        : typeof price === 'number'
-          ? price
-          : NaN;
+    for (const price of prices) {
+      const value =
+        typeof price === 'string'
+          ? parseFloat(price)
+          : typeof price === 'number'
+            ? price
+            : NaN;
 
-    if (!Number.isNaN(value) && value > 0) {
-      return value;
+      if (!Number.isNaN(value) && value > 0) {
+        return value;
+      }
     }
+
+    return 0;
   }
 
-  return 0;
-}
-
- private extractSize(item: MenuItem): string {
-  return '';
-}
+  private extractSize(item: MenuItem): string {
+    return '';
+  }
 
   private extractChoiceGroups(item: MenuItem): string {
     if (!item) return '';
 
     // Look for choice groups, modifiers, options
-    const choices = 
-      item.choiceGroups || 
-      item.modifiers || 
-      item.options || 
-      item.addons || 
+    const choices =
+      item.choiceGroups ||
+      item.modifiers ||
+      item.options ||
+      item.addons ||
       [];
 
     if (!Array.isArray(choices) || choices.length === 0) {
