@@ -48,7 +48,7 @@ export default function Admin() {
     useEffect(() => {
         const fetchUsers = async () => {
             try {
-                const response = await fetch('http://localhost:3001/api/users');
+                const response = await fetch('https://menu-scraper1.onrender.com/api/users');
                 const data = await response.json();
 
                 if (data.success) {
@@ -76,7 +76,7 @@ export default function Admin() {
             setIsCreating(true);
 
             // Send new user data to backend
-            const response = await fetch('http://localhost:3001/api/users/create', {
+            const response = await fetch('https://menu-scraper1.onrender.com//api/users/create', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -130,7 +130,7 @@ export default function Admin() {
 
     const handleToggleUserStatus = async (userId: string, currentStatus: boolean) => {
         try {
-            const response = await fetch(`http://localhost:3001/api/users/${userId}/status`, {
+            const response = await fetch(`https://menu-scraper1.onrender.com/api/users/${userId}/status`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -197,7 +197,7 @@ export default function Admin() {
 
         try {
             const response = await fetch(
-                `http://localhost:3001/api/users/${userId}`,
+                `https://menu-scraper1.onrender.com/api/users/${userId}`,
                 {
                     method: 'DELETE',
                 }
@@ -245,7 +245,7 @@ export default function Admin() {
         try {
             setIsUpdating(true);
 
-            const response = await fetch(`http://localhost:3001/api/users/${userId}`, {
+            const response = await fetch(`https://menu-scraper1.onrender.com/api/users/${userId}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
@@ -328,7 +328,7 @@ export default function Admin() {
     ) => {
         try {
             const response = await fetch(
-                `http://localhost:3001/api/users/${userId}/extend`,
+                `https://menu-scraper1.onrender.com/api/users/${userId}/extend`,
                 {
                     method: 'PATCH',
                     headers: {

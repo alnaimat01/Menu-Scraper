@@ -29,7 +29,7 @@ export default function Login() {
 
             // Send login request to the Express backend
             // Backend checks MongoDB, bcrypt password, active status, and subscription dates
-            const response = await fetch('http://localhost:3001/api/auth/login', {
+            const response = await fetch('https://menu-scraper1.onrender.com/api/auth/login', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
