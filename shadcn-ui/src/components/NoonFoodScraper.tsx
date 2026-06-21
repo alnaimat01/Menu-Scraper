@@ -46,7 +46,7 @@ export function NoonFoodScraper() {
     setIsFetchingMenu(true);
 
     try {
-      const response = await fetch('http://localhost:3001/noon-food', {
+      const response = await fetch('https://menu-scraper1.onrender.com/noon-food', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
