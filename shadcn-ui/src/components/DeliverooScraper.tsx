@@ -25,7 +25,7 @@ const handleGetDeliverooSource = async () => {
   setIsFetchingSource(true);
 
   try {
-    const response = await fetch('https://menu-scraper1.onrender.com/fetch', {
+    const response = await fetch('https://menu-scraper-platform1.onrender.com/fetch', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
