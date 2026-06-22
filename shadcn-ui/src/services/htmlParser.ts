@@ -58,31 +58,31 @@ interface NextDataStructure {
 export class HTMLParser {
   parseMenuFromHTML(html: string): { menuItems: ProcessedMenuItem[]; choiceGroups: ProcessedChoiceGroup[] } {
     console.time('Total Parsing Time');
-    
+
     const parser = new DOMParser();
     const doc = parser.parseFromString(html, 'text/html');
-    
+
     const menuItems: ProcessedMenuItem[] = [];
     const choiceGroups: ProcessedChoiceGroup[] = [];
     const seenItems = new Set<string>();
 
     try {
       console.log('🔍 Analyzing HTML structure...');
-      
+
       const isReactSPA = html.includes('__NEXT_DATA__') || html.includes('react') || html.includes('_app');
-      
+
       if (isReactSPA) {
         console.log('⚠️ Detected React SPA - menu data is loaded dynamically via JavaScript');
         console.log('💡 Attempting to extract embedded JSON data...');
-        
+
         const scripts = doc.querySelectorAll('script[type="application/ld+json"]');
         let foundData = false;
-        
+
         for (const script of scripts) {
           try {
             const jsonData = JSON.parse(script.textContent || '');
             console.log('📦 Found JSON-LD data:', Object.keys(jsonData));
-            
+
             if (jsonData.hasMenuSection || jsonData.menu) {
               this.parseJSONMenuDataFast(jsonData, menuItems, choiceGroups, seenItems);
               foundData = true;
@@ -92,7 +92,7 @@ export class HTMLParser {
             continue;
           }
         }
-        
+
         if (!foundData) {
           const nextDataScript = doc.querySelector('script#__NEXT_DATA__');
           if (nextDataScript) {
@@ -106,14 +106,14 @@ export class HTMLParser {
             }
           }
         }
-        
+
         if (!foundData) {
           console.log('❌ Could not extract menu data from React SPA');
           console.log('💡 Recommendation: Use Talabat API directly instead of HTML parsing');
         }
       } else {
         console.log('📄 Traditional HTML detected, attempting standard parsing...');
-        
+
         if (this.parseTalabatStructure(doc, menuItems, choiceGroups, seenItems)) {
           console.log(`✓ Strategy 1 succeeded: ${menuItems.length} items`);
         } else if (this.parseStructuredData(doc, menuItems, choiceGroups, seenItems)) {
@@ -124,7 +124,7 @@ export class HTMLParser {
       }
 
       console.log(`Final result: ${menuItems.length} menu items and ${choiceGroups.length} choice groups`);
-      
+
     } catch (error) {
       console.error('HTML parsing error:', error);
     }
@@ -142,20 +142,20 @@ export class HTMLParser {
     try {
       const props = nextData?.props?.pageProps;
       if (!props) return;
-      
+
       const possiblePaths = [
         props.menu,
         props.restaurant?.menu,
         props.initialData?.menu,
         props.data?.menu
       ];
-      
+
       for (const menuData of possiblePaths) {
         if (menuData?.categories) {
           console.log('✅ Found menu in Next.js data');
           menuData.categories.forEach((category) => {
             const categoryName = category.name || 'General';
-            (category.items || []).forEach((item) => {
+            (category.items || []).forEach((item: any) => {
               const itemData: ItemData = {
                 category: categoryName,
                 name: item.name || '',
@@ -184,7 +184,7 @@ export class HTMLParser {
     seenItems: Set<string>
   ): boolean {
     console.time('Strategy 1: Talabat Structure');
-    
+
     const categorySelectors = [
       '[data-testid*="menu-category"]',
       '[class*="MenuCategory"]',
@@ -195,12 +195,12 @@ export class HTMLParser {
     for (const selector of categorySelectors) {
       const categories = doc.querySelectorAll(selector);
       if (categories.length === 0) continue;
-      
+
       console.log(`Found ${categories.length} categories with: ${selector}`);
-      
+
       categories.forEach((categoryEl) => {
         const categoryName = this.extractCategoryNameFast(categoryEl);
-        
+
         const itemSelectors = [
           '[data-testid*="menu-item"]',
           '[class*="MenuItem"]',
@@ -211,7 +211,7 @@ export class HTMLParser {
         for (const itemSelector of itemSelectors) {
           const items = categoryEl.querySelectorAll(itemSelector);
           if (items.length === 0) continue;
-          
+
           items.forEach((itemEl) => {
             const itemData = this.extractItemDataFast(itemEl, categoryName);
             if (itemData?.name) {
@@ -221,13 +221,13 @@ export class HTMLParser {
           break;
         }
       });
-      
+
       if (menuItems.length > 0) {
         console.timeEnd('Strategy 1: Talabat Structure');
         return true;
       }
     }
-    
+
     console.timeEnd('Strategy 1: Talabat Structure');
     return false;
   }
@@ -239,13 +239,13 @@ export class HTMLParser {
     seenItems: Set<string>
   ): boolean {
     console.time('Strategy 2: JSON Data');
-    
+
     const scripts = doc.querySelectorAll('script[type="application/ld+json"]');
-    
+
     for (const script of scripts) {
       try {
         const data = JSON.parse(script.textContent || '');
-        
+
         if (data.hasMenuSection || data.menu || data.menuItems) {
           this.parseJSONMenuDataFast(data, menuItems, choiceGroups, seenItems);
           if (menuItems.length > 0) {
@@ -257,7 +257,7 @@ export class HTMLParser {
         continue;
       }
     }
-    
+
     console.timeEnd('Strategy 2: JSON Data');
     return false;
   }
@@ -269,15 +269,15 @@ export class HTMLParser {
     seenItems: Set<string>
   ): void {
     const sections = (data.hasMenuSection || data.menu || data.menuItems || []) as Record<string, unknown>[];
-    
+
     if (!Array.isArray(sections)) return;
-    
+
     sections.forEach((section: Record<string, unknown>) => {
       const category = this.capitalize((section.name || section.category || 'General') as string);
       const items = (section.hasMenuItem || section.items || []) as Record<string, unknown>[];
-      
+
       if (!Array.isArray(items)) return;
-      
+
       items.forEach((item: Record<string, unknown>) => {
         const offers = item.offers as Record<string, unknown> | undefined;
         const itemData: ItemData = {
@@ -288,7 +288,7 @@ export class HTMLParser {
           size: (item.size || 'NaN') as string,
           choiceGroups: this.extractChoiceGroupsFromJSON(item)
         };
-        
+
         if (itemData.name) {
           this.addMenuItemFast(itemData, menuItems, choiceGroups, seenItems);
         }
@@ -304,17 +304,17 @@ export class HTMLParser {
   ): boolean {
     console.time('Strategy 3: Fallback');
     console.log('Using fallback text parsing...');
-    
+
     const textContent = doc.body.textContent || '';
     const lines = textContent.split('\n');
-    
+
     let currentCategory = 'General';
     const priceRegex = /(\d+\.?\d*)\s*(?:KWD|KD|AED|SAR|BHD|QAR|OMR|USD|EUR|GBP)?/i;
-    
+
     for (const line of lines) {
       const trimmed = line.trim();
       if (!trimmed || trimmed.length < 3) continue;
-      
+
       if (trimmed.length < 50 && !priceRegex.test(trimmed) && /^[A-Z]/.test(trimmed)) {
         const words = trimmed.split(' ');
         if (words.length <= 5 && (trimmed === trimmed.toUpperCase() || this.isTitle(trimmed))) {
@@ -322,12 +322,12 @@ export class HTMLParser {
           continue;
         }
       }
-      
+
       const priceMatch = trimmed.match(priceRegex);
       if (priceMatch) {
         const price = parseFloat(priceMatch[1]);
         const itemName = trimmed.substring(0, trimmed.indexOf(priceMatch[0])).trim();
-        
+
         if (itemName.length > 3 && itemName.length < 100) {
           this.addMenuItemFast(
             {
@@ -345,7 +345,7 @@ export class HTMLParser {
         }
       }
     }
-    
+
     console.timeEnd('Strategy 3: Fallback');
     return menuItems.length > 0;
   }
@@ -353,13 +353,13 @@ export class HTMLParser {
   private extractCategoryNameFast(element: Element): string {
     const h2 = element.querySelector('h2');
     if (h2?.textContent) return this.capitalize(h2.textContent.trim());
-    
+
     const h3 = element.querySelector('h3');
     if (h3?.textContent) return this.capitalize(h3.textContent.trim());
-    
+
     const title = element.querySelector('[class*="title"]');
     if (title?.textContent) return this.capitalize(title.textContent.trim());
-    
+
     const text = element.textContent?.trim() || '';
     const firstLine = text.split('\n')[0].trim();
     return firstLine.length < 50 ? this.capitalize(firstLine) : 'General';
@@ -370,7 +370,7 @@ export class HTMLParser {
     const h4 = element.querySelector('h4');
     const nameEl = h3 || h4 || element.querySelector('[class*="name"]');
     const itemName = nameEl?.textContent?.trim();
-    
+
     if (!itemName) return null;
 
     const descEl = element.querySelector('p') || element.querySelector('[class*="desc"]');
@@ -408,9 +408,9 @@ export class HTMLParser {
 
   private extractChoiceGroupsFromJSON(item: Record<string, unknown>): string {
     const modifiers = (item.modifiers || item.options || item.customizations || item.modifierGroups) as Record<string, unknown>[] | undefined;
-    
+
     if (!modifiers || !Array.isArray(modifiers)) return '';
-    
+
     return modifiers
       .map((mod: Record<string, unknown>) => mod.name as string)
       .filter(Boolean)
@@ -450,7 +450,7 @@ export class HTMLParser {
 
   private capitalize(text: string): string {
     if (!text) return '';
-    
+
     if (text === text.toUpperCase()) {
       return text
         .toLowerCase()
@@ -458,7 +458,7 @@ export class HTMLParser {
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
     }
-    
+
     return text;
   }
 }

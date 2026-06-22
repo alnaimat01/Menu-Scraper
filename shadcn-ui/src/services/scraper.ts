@@ -38,10 +38,10 @@ export class TalabatScraper {
     try {
       // Fetch the page source
       const html = await this.fetchPage(url);
-      
+
       // Parse the HTML and extract menu data
       const data = this.parseMenuData(html);
-      
+
       return data;
     } catch (error) {
       throw new Error(`Scraping failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
@@ -96,7 +96,7 @@ export class TalabatScraper {
 
     // Extract choice groups from items
     const groupsMap = new Map<string, ChoiceGroup>();
-    
+
     // Parse choice groups from the page
     const choiceGroupElements = doc.querySelectorAll('[data-testid="choice-group"]');
     choiceGroupElements.forEach((groupElement) => {
@@ -133,7 +133,7 @@ export class TalabatScraper {
           const sizeName = sizeElement.querySelector('[data-testid="size-name"]')?.textContent?.trim() || '';
           const priceElement = sizeElement.querySelector('[data-testid="size-price"]');
           const originalPriceElement = sizeElement.querySelector('[data-testid="original-price"]');
-          
+
           // Always use original price if available (when there's an offer)
           const priceText = originalPriceElement?.textContent || priceElement?.textContent || '0';
           const price = parseFloat(priceText.replace(/[^0-9.]/g, ''));

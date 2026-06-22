@@ -16,61 +16,58 @@ export function DeliverooScraper() {
   const [restaurantName, setRestaurantName] = useState('');
   const [isFetchingSource, setIsFetchingSource] = useState(false);
 
-const handleGetDeliverooSource = async () => {
-  if (!deliverooUrl.trim()) {
-    toast.error('Please enter Deliveroo URL');
-    return;
-  }
-
-  setIsFetchingSource(true);
-
-  try {
-    const response = await fetch('https://menu-scraper-platform1.onrender.com/fetch', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ url: deliverooUrl.trim() }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok || !data.success) {
-      throw new Error(data.error || 'Failed to fetch source code');
+  const handleGetDeliverooSource = async () => {
+    if (!deliverooUrl.trim()) {
+      toast.error('Please enter Deliveroo URL');
+      return;
     }
 
-    setDeliverooSourceCode(data.html || '');
+    setIsFetchingSource(true);
 
-    const nameFromUrl = deliverooUrl
-  .split('?')[0]
-  .split('/')
-  .filter(Boolean)
-  .pop()
-  ?.replace(/-/g, ' ')
-  ?.trim();
+    try {
+      const response = await fetch('https://menu-scraper-platform1.onrender.com/fetch', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: deliverooUrl.trim() }),
+      });
 
-if (nameFromUrl) {
-  setRestaurantName(nameFromUrl);
-}
+      const data = await response.json();
 
-    toast.success('Deliveroo source code loaded successfully');
-  } catch (error) {
-    console.error('Error fetching Deliveroo source:', error);
+      if (!response.ok || !data.success) {
+        throw new Error(data.error || 'Failed to fetch source code');
+      }
 
-    const message = error instanceof Error ? error.message : 'Unknown error';
+      setDeliverooSourceCode(data.html || '');
 
-    toast.error('Failed to fetch Deliveroo source code', {
-      description: message
-    });
-  } finally {
-    setIsFetchingSource(false);
-  }
-};
+      const nameFromUrl = deliverooUrl
+        .split('?')[0]
+        .split('/')
+        .filter(Boolean)
+        .pop()
+        ?.replace(/-/g, ' ')
+        ?.trim();
+
+      if (nameFromUrl) {
+        setRestaurantName(nameFromUrl);
+      }
+
+      toast.success('Deliveroo source code loaded successfully');
+    } catch (error) {
+      console.error('Error fetching Deliveroo source:', error);
+
+      const message = error instanceof Error ? error.message : 'Unknown error';
+
+      toast.error('Failed to fetch Deliveroo source code', {
+        description: message
+      });
+    } finally {
+      setIsFetchingSource(false);
+    }
+  };
 
   const handleDeliverooExtract = () => {
-
-    
-
     try {
       const parser = new DeliverooParser();
       const items = parser.parseSourceCode(deliverooSourceCode);
@@ -82,11 +79,10 @@ if (nameFromUrl) {
 
       const exporter = new DeliverooExcelExporter();
       exporter.exportToExcel(
-  items,
-  restaurantName.trim() || 'Deliveroo Menu',
-  'deliveroo'
-);
-
+        items,
+        restaurantName.trim() || 'Deliveroo Menu',
+        'deliveroo'
+      );
 
       toast.success(`تم استخراج ${items.length} عنصر من Deliveroo بنجاح`);
       console.log('Deliveroo sample items:', items.slice(0, 5));
@@ -102,12 +98,12 @@ if (nameFromUrl) {
   };
 
   const clearAll = () => {
-  setDeliverooUrl('');
-  setDeliverooSourceCode('');
-  setRestaurantName('');
+    setDeliverooUrl('');
+    setDeliverooSourceCode('');
+    setRestaurantName('');
 
-  toast.info('تم مسح جميع الحقول');
-};
+    toast.info('تم مسح جميع الحقول');
+  };
 
   return (
     <Card>
@@ -129,39 +125,39 @@ if (nameFromUrl) {
           </Label>
 
           <div className="flex gap-3">
-  <Input
-    id="deliveroo-url"
-    placeholder="https://deliveroo.co.uk/menu/Kuwait/rai/mcdonalds-al-rai-lulu/..."
-    value={deliverooUrl}
-    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDeliverooUrl(e.target.value)}
-    className="h-11 flex-1"
-    dir="ltr"
-  />
+            <Input
+              id="deliveroo-url"
+              placeholder="https://deliveroo.co.uk/menu/Kuwait/rai/mcdonalds-al-rai-lulu/..."
+              value={deliverooUrl}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDeliverooUrl(e.target.value)}
+              className="h-11 flex-1"
+              dir="ltr"
+            />
 
-  <Button
-    onClick={handleGetDeliverooSource}
-    disabled={isFetchingSource || !deliverooUrl.trim()}
-    className="h-11 bg-green-600 hover:bg-green-700"
-  >
-    {isFetchingSource ? 'Loading...' : 'Get Source'}
-  </Button>
-</div>
-</div>
+            <Button
+              onClick={handleGetDeliverooSource}
+              disabled={isFetchingSource || !deliverooUrl.trim()}
+              className="h-11 bg-green-600 hover:bg-green-700"
+            >
+              {isFetchingSource ? 'Loading...' : 'Get Source'}
+            </Button>
+          </div>
+        </div>
 
-<div className="space-y-2">
-  <Label htmlFor="deliveroo-restaurant-name" className="text-sm font-semibold">
-    اسم المطعم
-  </Label>
+        <div className="space-y-2">
+          <Label htmlFor="deliveroo-restaurant-name" className="text-sm font-semibold">
+            اسم المطعم
+          </Label>
 
-  <Input
-    id="deliveroo-restaurant-name"
-    placeholder="مثال: McDonald's Al Rai Lulu"
-    value={restaurantName}
-    onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRestaurantName(e.target.value)}
-    className="h-11"
-    dir="auto"
-  />
-</div>
+          <Input
+            id="deliveroo-restaurant-name"
+            placeholder="مثال: McDonald's Al Rai Lulu"
+            value={restaurantName}
+            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setRestaurantName(e.target.value)}
+            className="h-11"
+            dir="auto"
+          />
+        </div>
 
         <div className="space-y-2">
           <div className="flex justify-between items-center">
@@ -184,30 +180,26 @@ if (nameFromUrl) {
             className="min-h-[300px] font-mono text-xs"
             dir="ltr"
           />
-
-          
         </div>
 
         <div className="flex gap-3">
-  <Button
-    className="flex-1 bg-blue-600 hover:bg-blue-700 h-12 text-base font-semibold"
-    disabled={!deliverooSourceCode.trim()}
-    onClick={handleDeliverooExtract}
-  >
-    <Download className="mr-2 h-5 w-5" />
-    Extract Deliveroo Menu
-  </Button>
+          <Button
+            className="flex-1 bg-blue-600 hover:bg-blue-700 h-12 text-base font-semibold"
+            disabled={!deliverooSourceCode.trim()}
+            onClick={handleDeliverooExtract}
+          >
+            <Download className="mr-2 h-5 w-5" />
+            Extract Deliveroo Menu
+          </Button>
 
-  <Button
-    variant="outline"
-    className="h-12 px-6"
-    onClick={clearAll}
-  >
-    مسح الكل
-  </Button>
-</div>
-        
-        
+          <Button
+            variant="outline"
+            className="h-12 px-6"
+            onClick={clearAll}
+          >
+            مسح الكل
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );

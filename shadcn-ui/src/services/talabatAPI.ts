@@ -92,7 +92,7 @@ export class TalabatAPI {
           }
 
           const data = await response.json() as TalabatAPIResponse;
-          
+
           if (data?.data?.menu?.categories) {
             console.log(`✅ API succeeded! Found ${data.data.menu.categories.length} categories`);
             return this.parseAPIResponse(data);
@@ -113,7 +113,7 @@ export class TalabatAPI {
 
     data.data.menu.categories.forEach(category => {
       categories.push(category.name);
-      
+
       category.items.forEach(item => {
         items.push({
           ...item,
@@ -126,27 +126,29 @@ export class TalabatAPI {
     return { items, categories };
   }
 
- async fetchItemChoices(branchId: string | number, itemId: string | number): Promise<any[]> {
-const endpoint = `https://menu-scraper-platform1.onrender.com/choices?branchId=${branchId}&itemId=${itemId}`;
-  try {
-    const response = await fetch(endpoint, {
-      method: 'GET',
-      headers: {
-        'Accept': 'application/json'
-      }
-    });
 
-    if (!response.ok) {
-      console.log(`❌ Choices API failed for item ${itemId}: ${response.status}`);
+  async fetchItemChoices(branchId: string | number, itemId: string | number): Promise<any[]> {
+    const endpoint = `https://menu-scraper-platform1.onrender.com/choices?branchId=${branchId}&itemId=${itemId}`;
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json'
+        }
+      });
+
+      if (!response.ok) {
+        console.log(`❌ Choices API failed for item ${itemId}: ${response.status}`);
+        return [];
+      }
+
+      const data = await response.json();
+
+      return data.choices || data.modifiers || data.data || [];
+    } catch (error) {
+      console.log(`❌ Failed to fetch choices for item ${itemId}`, error);
       return [];
     }
-
-    const data = await response.json();
-
-    return data?.choices || [];
-  } catch (error) {
-    console.log(`❌ Choices API error for item ${itemId}:`, error);
-    return [];
   }
-}
 }

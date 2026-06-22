@@ -26,9 +26,9 @@ export function PageSourceExtractor({ url, proxyUrl, proxyAuth }: PageSourceExtr
       // Use a CORS proxy to fetch the page
       const corsProxy = 'https://api.allorigins.win/raw?url=';
       const targetUrl = encodeURIComponent(url);
-      
+
       const response = await fetch(corsProxy + targetUrl);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch page');
       }

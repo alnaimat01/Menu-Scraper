@@ -11,77 +11,77 @@ export class NoonFoodExcelExporter {
   }
 
   private isSizeGroup(group: any): boolean {
-  const options = group.choices || group.options || group.modifiers || [];
-  if (!options.length) return false;
+    const options = group.choices || group.options || group.modifiers || [];
+    if (!options.length) return false;
 
-  const sizeWords = [
-    'small',
-    'medium',
-    'large',
-    'regular',
-    'family',
-    'single',
-    'double',
-    'triple',
-    'half',
-    'quarter',
-    'full',
-    'xs',
-    's',
-    'm',
-    'l',
-    'xl',
-    'xxl',
-    'xxxl',
-    'صغير',
-    'وسط',
-    'كبير',
-    'عائلي',
-    'نصف',
-    'نص',
-    'ربع',
-    'كامل'
-  ];
+    const sizeWords = [
+      'small',
+      'medium',
+      'large',
+      'regular',
+      'family',
+      'single',
+      'double',
+      'triple',
+      'half',
+      'quarter',
+      'full',
+      'xs',
+      's',
+      'm',
+      'l',
+      'xl',
+      'xxl',
+      'xxxl',
+      'صغير',
+      'وسط',
+      'كبير',
+      'عائلي',
+      'نصف',
+      'نص',
+      'ربع',
+      'كامل'
+    ];
 
-  const isPureWeightOrPieces = (name: string) => {
-    const cleanName = name.trim().toLowerCase();
+    const isPureWeightOrPieces = (name: string) => {
+      const cleanName = name.trim().toLowerCase();
 
-    return (
-      /^(\d+(\.\d+)?|\d+\/\d+)\s*(g|gm|gram|grams|kg|kilo|kilogram|kilograms|oz|ounce|ounces|l|liter|litre|liters|litres|ml|gallon|gallons|galon)$/.test(cleanName) ||
-      /^(half|quarter)\s*(kg|kilo|kilogram)$/.test(cleanName) ||
-      /^(\d+)\s*(pc|pcs|piece|pieces)$/.test(cleanName) ||
-      /^(نص|نصف|ربع)\s*(كيلو|كجم|kg)$/.test(cleanName) ||
-      /^(\d+)\s*(قطعة|قطع)$/.test(cleanName)
-    );
-  };
+      return (
+        /^(\d+(\.\d+)?|\d+\/\d+)\s*(g|gm|gram|grams|kg|kilo|kilogram|kilograms|oz|ounce|ounces|l|liter|litre|liters|litres|ml|gallon|gallons|galon)$/.test(cleanName) ||
+        /^(half|quarter)\s*(kg|kilo|kilogram)$/.test(cleanName) ||
+        /^(\d+)\s*(pc|pcs|piece|pieces)$/.test(cleanName) ||
+        /^(نص|نصف|ربع)\s*(كيلو|كجم|kg)$/.test(cleanName) ||
+        /^(\d+)\s*(قطعة|قطع)$/.test(cleanName)
+      );
+    };
 
-  const isPureSizeName = (name: string) => {
-    const cleanName = name.trim().toLowerCase();
+    const isPureSizeName = (name: string) => {
+      const cleanName = name.trim().toLowerCase();
 
-    if (!cleanName) return false;
+      if (!cleanName) return false;
 
-    if (sizeWords.includes(cleanName)) return true;
+      if (sizeWords.includes(cleanName)) return true;
 
-    const sizeWithMeasureRegex =
-      /^(small|medium|large|regular|family|single|double|triple|half|quarter|full|xs|s|m|l|xl|xxl|xxxl)\s*(\(?\d+(\.\d+)?\s*(ml|l|liter|litre|oz|g|gm|gram|kg|piece|pieces|pc|pcs)\)?)$/;
+      const sizeWithMeasureRegex =
+        /^(small|medium|large|regular|family|single|double|triple|half|quarter|full|xs|s|m|l|xl|xxl|xxxl)\s*(\(?\d+(\.\d+)?\s*(ml|l|liter|litre|oz|g|gm|gram|kg|piece|pieces|pc|pcs)\)?)$/;
 
-    if (sizeWithMeasureRegex.test(cleanName)) return true;
+      if (sizeWithMeasureRegex.test(cleanName)) return true;
 
-    return isPureWeightOrPieces(cleanName);
-  };
+      return isPureWeightOrPieces(cleanName);
+    };
 
-  const optionNames = options
-    .map((option: any) => String(option.name || option.title || '').trim())
-    .filter(Boolean);
+    const optionNames = options
+      .map((option: any) => String(option.name || option.title || '').trim())
+      .filter(Boolean);
 
-  if (optionNames.length === 0) return false;
+    if (optionNames.length === 0) return false;
 
-  const sizeCount = optionNames.filter((name: string) =>
-    isPureSizeName(name)
-  ).length;
+    const sizeCount = optionNames.filter((name: string) =>
+      isPureSizeName(name)
+    ).length;
 
-  return sizeCount >= Math.ceil(optionNames.length * 0.7);
-}
+    return sizeCount >= Math.ceil(optionNames.length * 0.5);
+  }
   private calculateFinalSizePrice(itemPrice: any, sizePrice: any): string {
     const base = Number(itemPrice) || 0;
     const extra = Number(sizePrice) || 0;
@@ -162,10 +162,10 @@ export class NoonFoodExcelExporter {
       ...exportItems.flatMap(item => {
         const choiceGroupNames = item.modifiers && item.modifiers.length > 0
           ? item.modifiers
-              .filter((group: any) => !this.isSizeGroup(group))
-              .map((group: any) => getUniqueGroupName(group))
-              .filter(Boolean)
-              .join(' #')
+            .filter((group: any) => !this.isSizeGroup(group))
+            .map((group: any) => getUniqueGroupName(group))
+            .filter(Boolean)
+            .join(' #')
           : item.choiceGroups;
 
         const sizeGroup = item.modifiers?.find((group: any) =>
