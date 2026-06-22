@@ -18,6 +18,7 @@ export class NoonFoodExcelExporter {
       'small',
       'medium',
       'large',
+      'Big',
       'regular',
       'family',
       'single',
@@ -48,9 +49,9 @@ export class NoonFoodExcelExporter {
 
       return (
         /^(\d+(\.\d+)?|\d+\/\d+)\s*(g|gm|gram|grams|kg|kilo|kilogram|kilograms|oz|ounce|ounces|l|liter|litre|liters|litres|ml|gallon|gallons|galon)$/.test(cleanName) ||
-        /^(half|quarter)\s*(kg|kilo|kilogram)$/.test(cleanName) ||
+        /^(full|half|quarter)\s*(kg|kilo|kilogram)$/.test(cleanName) ||
         /^(\d+)\s*(pc|pcs|piece|pieces)$/.test(cleanName) ||
-        /^(نص|نصف|ربع)\s*(كيلو|كجم|kg)$/.test(cleanName) ||
+        /^(نص|نصف|ربع|كامل)\s*(كيلو|كجم|kg)$/.test(cleanName) ||
         /^(\d+)\s*(قطعة|قطع)$/.test(cleanName)
       );
     };
@@ -63,7 +64,7 @@ export class NoonFoodExcelExporter {
       if (sizeWords.includes(cleanName)) return true;
 
       const sizeWithMeasureRegex =
-        /^(small|medium|large|regular|family|single|double|triple|half|quarter|full|xs|s|m|l|xl|xxl|xxxl)\s*(\(?\d+(\.\d+)?\s*(ml|l|liter|litre|oz|g|gm|gram|kg|piece|pieces|pc|pcs)\)?)$/;
+        /^(small|medium|large|Big|regular|family|single|double|triple|half|quarter|full|xs|s|m|l|xl|xxl|xxxl)\s*(\(?\d+(\.\d+)?\s*(ml|l|liter|litre|oz|g|gm|gram|kg|piece|pieces|pc|pcs)\)?)$/;
 
       if (sizeWithMeasureRegex.test(cleanName)) return true;
 
